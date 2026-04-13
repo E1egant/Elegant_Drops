@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Elegant Drops | Admin Access</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/premium-admin.css}">
+</head>
+<body class="min-h-screen flex items-center justify-center p-6">
+
+    <div class="w-full max-w-md">
+        <div class="text-center mb-10">
+            <img th:src="@{/images/logo-elegant.png}" alt="Logo" class="h-24 w-auto mx-auto mb-6">
+            <h1 class="text-3xl font-luxury text-white tracking-widest uppercase">Elegant Drops</h1>
+            <p class="text-[10px] tracking-[0.4em] text-[#c9967a] font-bold uppercase mt-2">Panel Administración</p>
+        </div>
+
+        <div class="bg-[#1a1714] rounded-[2rem] p-10 border border-white/10">
+
+            <div th:if="${param.error}" class="mb-6 bg-red-950/50 border border-red-900/50 text-red-400 p-4 rounded-2xl text-xs font-bold flex items-center gap-3">
+                <i class="fas fa-exclamation-circle text-lg"></i>
+                Credenciales incorrectas. Intenta de nuevo.
+            </div>
+
+            <form th:action="@{/{path}/login(path=${adminPath})}" method="post" class="space-y-6">
+
+                <div class="space-y-2">
+                    <label class="text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-1">Correo Electrónico</label>
+                    <div class="relative">
+                        <i class="fas fa-envelope absolute left-4 top-1/2 -translate-y-1/2 text-zinc-600"></i>
+                        <input type="email" name="email" required
+                               class="input-premium pl-12"
+                               placeholder="admin@elegantdrops.cl">
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-1">Contraseña</label>
+                    <div class="relative">
+                        <i class="fas fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-zinc-600"></i>
+                        <input type="password" name="password" required
+                               class="input-premium pl-12"
+                               placeholder="••••••••">
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-luxury w-full py-5 text-xs tracking-[0.2em] mt-4">
+                    Iniciar Sesión
+                </button>
+            </form>
+        </div>
+
+        <div class="text-center mt-10">
+            <a th:href="@{/}" class="text-[10px] font-black text-zinc-600 uppercase tracking-widest hover:text-[#c9967a] transition flex items-center justify-center gap-2">
+                <i class="fas fa-arrow-left"></i> Volver a la Tienda
+            </a>
+        </div>
+    </div>
+
+</body>
+</html>

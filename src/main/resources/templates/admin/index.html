@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Elegant Drops | Luxury Fragrance</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/premium-admin.css}">
+    <link rel="stylesheet" th:href="@{/css/index.css}">
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="h-24 premium-navbar flex justify-between items-center px-12 sticky top-0 z-50">
+    <a th:href="@{/}" class="flex items-center gap-6">
+        <img th:src="@{/images/logo-elegant.png}" alt="Logo" class="h-16 w-auto">
+        <div class="flex flex-col border-l pl-6 border-white/10">
+            <span class="text-lg font-luxury text-white tracking-widest uppercase">Elegant Drops</span>
+            <span class="text-[8px] tracking-[0.4em] text-[#c9967a] font-bold uppercase mt-1">Decants & Fragrances</span>
+        </div>
+    </a>
+    <button onclick="toggleCarrito()" class="relative text-zinc-400 hover:text-white transition">
+        <i class="fas fa-shopping-bag text-xl"></i>
+        <span id="carritoCount" class="hidden absolute -top-2 -right-2 bg-[#c9967a] text-black text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center">0</span>
+    </button>
+</nav>
+
+<!-- FILTROS -->
+<div class="sticky top-24 z-40 bg-[#111009]/95 backdrop-blur-md border-b border-white/[0.03]">
+    <div class="container mx-auto px-12 py-5 flex gap-3 overflow-x-auto scrollbar-hide">
+        <a th:href="@{/?filtro=todos}" th:class="${filtroActivo == 'todos'} ? 'filtro-btn activo' : 'filtro-btn'">Todos</a>
+        <a th:href="@{/?filtro=Nicho}" th:class="${filtroActivo == 'Nicho'} ? 'filtro-btn activo' : 'filtro-btn'">Nicho</a>
+        <a th:href="@{/?filtro=Diseñador}" th:class="${filtroActivo == 'Diseñador'} ? 'filtro-btn activo' : 'filtro-btn'">Diseñador</a>
+        <a th:href="@{/?filtro=Árabe}" th:class="${filtroActivo == 'Árabe'} ? 'filtro-btn activo' : 'filtro-btn'">Árabe</a>
+        <div class="w-px bg-white/10 mx-2"></div>
+        <a th:href="@{/?filtro=Hombre}" th:class="${filtroActivo == 'Hombre'} ? 'filtro-btn activo' : 'filtro-btn'">Hombre</a>
+        <a th:href="@{/?filtro=Mujer}" th:class="${filtroActivo == 'Mujer'} ? 'filtro-btn activo' : 'filtro-btn'">Mujer</a>
+        <a th:href="@{/?filtro=Unisex}" th:class="${filtroActivo == 'Unisex'} ? 'filtro-btn activo' : 'filtro-btn'">Unisex</a>
+    </div>
+</div>
+
+<!-- CATÁLOGO -->
+<main class="container mx-auto px-12 py-16 pb-32">
+    <div th:if="${#lists.isEmpty(fragancias)}" class="text-center py-32">
+        <p class="text-zinc-600 text-sm uppercase tracking-widest">No hay fragancias disponibles en esta categoría</p>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+        <div th:each="f : ${fragancias}"
+             onclick="abrirModal(this)"
+             th:data-id="${f.id}"
+             th:data-nombre="${f.nombre}"
+             th:data-marca="${f.marca}"
+             th:data-concentracion="${f.concentracion}"
+             th:data-tipo="${f.tipo}"
+             th:data-genero="${f.genero}"
+             th:data-descripcion="${f.descripcion}"
+             th:data-imagen="${f.imagen}"
+             th:data-formatos="${#strings.toString(f.formatos.![ml + ':' + precio].toString())}"
+             th:data-formatoids="${#strings.toString(f.formatos.![id.toString()].toString())}"
+             class="tarjeta-perfume cursor-pointer">
+
+            <!-- IMAGEN -->
+            <div class="imagen-perfume-container">
+                <img th:if="${f.imagen != null and !f.imagen.isEmpty()}"
+                     th:src="@{/{img}(img=${'images/perfumes/' + f.imagen})}"
+                     class="imagen-perfume" alt="Perfume">
+                <div th:if="${f.imagen == null or f.imagen.isEmpty()}"
+                     class="imagen-perfume-placeholder">
+                    <i class="fas fa-spray-can text-3xl text-zinc-700"></i>
+                </div>
+            </div>
+
+            <!-- INFO -->
+            <div class="p-6">
+                <span class="text-item-brand block mb-1" th:text="${f.marca}"></span>
+                <h3 class="text-white font-bold text-lg uppercase tracking-wide mb-1" th:text="${f.nombre}"></h3>
+                <div class="flex gap-2 mb-4">
+                    <span class="tag-badge" th:text="${f.concentracion}"></span>
+                    <span class="tag-badge" th:if="${f.tipo != null and !f.tipo.isEmpty()}" th:text="${f.tipo}"></span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <div>
+                        <span class="text-zinc-500 text-[9px] uppercase tracking-widest">Desde</span>
+                        <p class="text-white font-bold text-lg">
+                            $<span th:text="${f.formatos.isEmpty() ? '—' : f.formatos[0].precio}"></span>
+                        </p>
+                    </div>
+                    <div class="ver-mas-btn">
+                        <i class="fas fa-plus text-[10px]"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- MODAL DETALLE PERFUME -->
+<div id="modalDetalle" class="fixed inset-0 bg-black/90 hidden z-[100] flex items-center justify-center p-4 backdrop-blur-md">
+    <div class="bg-[#1a1714] border border-white/10 rounded-[2rem] w-full max-w-2xl overflow-hidden">
+        <div class="flex flex-col md:flex-row">
+            <!-- IMAGEN -->
+            <div class="md:w-2/5 bg-[#111009] flex items-center justify-center p-10 min-h-64">
+                <img id="modalImagen" src="#" alt="Perfume" class="max-h-72 w-auto object-contain hidden">
+                <div id="modalImagenPlaceholder" class="flex items-center justify-center">
+                    <i class="fas fa-spray-can text-5xl text-zinc-700"></i>
+                </div>
+            </div>
+            <!-- DETALLE -->
+            <div class="md:w-3/5 p-10 flex flex-col justify-between">
+                <div>
+                    <button onclick="cerrarModal()" class="text-zinc-600 hover:text-white transition text-xs uppercase tracking-widest mb-6 flex items-center gap-2">
+                        <i class="fas fa-times"></i> Cerrar
+                    </button>
+                    <span id="modalMarca" class="text-item-brand block mb-1"></span>
+                    <h2 id="modalNombre" class="text-white font-luxury text-2xl uppercase tracking-wide mb-2"></h2>
+                    <div class="flex gap-2 mb-4">
+                        <span id="modalConcentracion" class="tag-badge"></span>
+                        <span id="modalTipo" class="tag-badge"></span>
+                        <span id="modalGenero" class="tag-badge"></span>
+                    </div>
+                    <p id="modalDescripcion" class="text-zinc-400 text-xs leading-relaxed italic mb-6"></p>
+
+                    <!-- SELECTOR ML -->
+                    <div class="mb-6">
+                        <p class="text-[9px] text-zinc-500 uppercase tracking-widest mb-3">Selecciona el tamaño</p>
+                        <div id="modalFormatos" class="flex flex-wrap gap-2"></div>
+                    </div>
+
+                    <!-- PRECIO -->
+                    <div class="flex items-center justify-between mb-6">
+                        <div>
+                            <span class="text-zinc-500 text-[9px] uppercase tracking-widest">Precio</span>
+                            <p id="modalPrecio" class="text-white font-bold text-2xl">—</p>
+                        </div>
+                    </div>
+                </div>
+
+                <button onclick="agregarAlCarrito()" class="btn-luxury w-full py-4 text-xs uppercase tracking-widest">
+                    <i class="fas fa-shopping-bag mr-2"></i> Agregar al carrito
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- PANEL CARRITO -->
+<div id="panelCarrito" class="fixed top-0 right-0 h-full w-full max-w-sm bg-[#1a1714] border-l border-white/10 z-[200] transform translate-x-full transition-transform duration-300 flex flex-col">
+    <div class="p-8 border-b border-white/[0.05] flex justify-between items-center">
+        <h3 class="font-luxury text-white uppercase tracking-widest text-lg">Carrito</h3>
+        <button onclick="toggleCarrito()" class="text-zinc-600 hover:text-white transition">
+            <i class="fas fa-times text-lg"></i>
+        </button>
+    </div>
+    <div id="carritoItems" class="flex-1 overflow-y-auto p-8 space-y-4">
+        <p id="carritoVacio" class="text-zinc-600 text-xs uppercase tracking-widest text-center py-8">Tu carrito está vacío</p>
+    </div>
+    <div class="p-8 border-t border-white/[0.05]">
+        <div class="flex justify-between items-center mb-6">
+            <span class="text-zinc-400 text-xs uppercase tracking-widest">Total</span>
+            <span id="carritoTotal" class="text-white font-bold text-xl">$0</span>
+        </div>
+        <button onclick="irAlCheckout()" class="btn-luxury w-full py-4 text-xs uppercase tracking-widest">
+            Proceder al pago
+        </button>
+    </div>
+</div>
+<div id="carritoOverlay" class="fixed inset-0 bg-black/50 hidden z-[199]" onclick="toggleCarrito()"></div>
+
+<footer class="border-t border-white/[0.03] py-16 text-center">
+    <p class="text-[9px] tracking-[0.6em] text-zinc-700 uppercase">Elegant Drops Chile · Excellence in Every Drop</p>
+</footer>
+
+<script th:src="@{/js/index.js}"></script>
+</body>
+</html>
