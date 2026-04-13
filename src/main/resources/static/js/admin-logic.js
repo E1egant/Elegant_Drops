@@ -7,6 +7,7 @@ function openModalFragancia() {
     document.getElementById('inputGenero').value = '';
     document.getElementById('inputTipo').value = '';
     document.getElementById('inputDescripcion').value = '';
+    document.getElementById('inputOrden').value = '';
     document.getElementById('inputImagen').value = '';
     document.getElementById('fileNameLabel').innerText = 'Seleccionar imagen del perfume';
     document.getElementById('previewContainer').classList.add('hidden');
@@ -22,6 +23,7 @@ function editFragancia(btn) {
     document.getElementById('inputGenero').value = btn.getAttribute('data-genero') || '';
     document.getElementById('inputTipo').value = btn.getAttribute('data-tipo') || '';
     document.getElementById('inputDescripcion').value = btn.getAttribute('data-descripcion');
+    document.getElementById('inputOrden').value = btn.getAttribute('data-orden') || '';
     document.getElementById('inputImagen').value = '';
     document.getElementById('fileNameLabel').innerText = 'Cambiar imagen (opcional)';
     document.getElementById('previewContainer').classList.add('hidden');

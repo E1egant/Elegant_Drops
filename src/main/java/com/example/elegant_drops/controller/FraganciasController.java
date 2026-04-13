@@ -24,6 +24,7 @@ public class FraganciasController {
 
         List<Fragancia> fraganciasDisponibles = todasLasFragancias.stream()
                 .filter(f -> f.getDisponible() != null && f.getDisponible())
+                .sorted(Comparator.comparingInt(f -> f.getOrden() != null ? f.getOrden() : 999))
                 .peek(f -> f.getFormatos().sort(Comparator.comparingInt(formato -> formato.getMl())))
                 .collect(Collectors.toList());
 

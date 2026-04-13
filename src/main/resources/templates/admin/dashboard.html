@@ -23,7 +23,6 @@
     </div>
 </nav>
 
-<!-- TABS -->
 <div class="sticky top-24 z-40 bg-[#111009]/95 backdrop-filter backdrop-blur border-b border-white/[0.03]">
     <div class="container mx-auto px-10 flex gap-8">
         <button onclick="mostrarSeccion('inventario')" id="tabInventario"
@@ -39,7 +38,6 @@
 
 <main class="container mx-auto mt-12 px-10 pb-32">
 
-    <!-- SECCIÓN INVENTARIO -->
     <div id="seccionInventario">
         <div class="flex justify-between items-end mb-16">
             <div>
@@ -53,6 +51,7 @@
             <table class="w-full text-left">
                 <thead>
                     <tr class="table-header border-b border-white/[0.03]">
+                        <th class="px-8 py-6">Orden</th>
                         <th class="px-8 py-6">Estado</th>
                         <th class="px-8 py-6">Fragancia</th>
                         <th class="px-8 py-6">Formatos</th>
@@ -61,6 +60,10 @@
                 </thead>
                 <tbody class="divide-y divide-white/[0.02]">
                     <tr th:each="f : ${fragancias}" class="hover:bg-white/[0.01] transition-colors">
+
+                        <td class="px-8 py-8">
+                            <span class="text-zinc-500 text-sm font-bold" th:text="${f.orden != null ? f.orden : '—'}"></span>
+                        </td>
 
                         <td class="px-8 py-8">
                             <a th:href="@{/{path}/toggle/{id}(path=${adminPath}, id=${f.id})}"
@@ -72,7 +75,7 @@
                         <td class="px-8 py-8">
                             <div class="flex items-start gap-6">
                                 <img th:if="${f.imagen != null and !f.imagen.isEmpty()}"
-                                     th:src="@{/{img}(img=${'images/perfumes/' + f.imagen})}"
+                                     th:src="${f.imagen}"
                                      class="h-20 w-16 object-cover rounded-lg border border-white/10 flex-shrink-0"
                                      alt="Imagen perfume">
                                 <div th:if="${f.imagen == null or f.imagen.isEmpty()}"
@@ -124,6 +127,7 @@
                                     th:data-concentracion="${f.concentracion}"
                                     th:data-genero="${f.genero}"
                                     th:data-tipo="${f.tipo}"
+                                    th:data-orden="${f.orden}"
                                     th:data-descripcion="${f.descripcion}"
                                     onclick="editFragancia(this)"
                                     class="action-btn"
@@ -138,17 +142,13 @@
                                 </a>
                             </div>
                         </td>
-
                     </tr>
                 </tbody>
             </table>
         </div>
     </div>
 
-    <!-- SECCIÓN VENTAS -->
     <div id="seccionVentas" class="hidden">
-
-        <!-- ESTADÍSTICAS -->
         <div class="mb-16">
             <div>
                 <h2 class="text-4xl font-luxury text-white uppercase tracking-tight">Ventas</h2>
@@ -170,7 +170,6 @@
             </div>
         </div>
 
-        <!-- TABLA VENTAS -->
         <div class="card-perfume overflow-hidden">
             <table class="w-full text-left">
                 <thead>
@@ -241,11 +240,20 @@
             <textarea name="descripcion" id="inputDescripcion" rows="3"
                       placeholder="Notas olfativas... ej: Bergamota, sándalo, vainilla"
                       class="input-premium w-full"></textarea>
-            <div class="input-file-luxury">
-                <input type="file" name="imagenFile" id="inputImagen" accept="image/*">
-                <div class="file-label">
-                    <i class="fas fa-cloud-upload-alt"></i>
-                    <span id="fileNameLabel">Seleccionar imagen del perfume</span>
+            <div class="grid grid-cols-2 gap-4">
+                <div class="flex flex-col gap-2">
+                    <label class="text-[10px] text-zinc-400 uppercase tracking-widest">Posición en tienda</label>
+                    <input type="number" name="orden" id="inputOrden" placeholder="ej: 1, 2, 3..." min="1" class="input-premium">
+                </div>
+                <div class="flex flex-col gap-2">
+                    <label class="text-[10px] text-zinc-400 uppercase tracking-widest">Imagen del perfume</label>
+                    <div class="input-file-luxury">
+                        <input type="file" name="imagenFile" id="inputImagen" accept="image/*">
+                        <div class="file-label">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <span id="fileNameLabel">Seleccionar imagen</span>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div id="previewContainer" class="hidden">

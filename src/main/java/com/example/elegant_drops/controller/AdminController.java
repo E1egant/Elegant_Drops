@@ -2,7 +2,7 @@ package com.example.elegant_drops.controller;
 
 import com.example.elegant_drops.model.Fragancia;
 import com.example.elegant_drops.model.Formato;
-import com.example.elegant_drops.repository.VentaRepository;
+import com.example.elegant_drops.service.CloudinaryService;
 import com.example.elegant_drops.service.FraganciasService;
 import com.example.elegant_drops.repository.FraganciasRepository;
 import com.example.elegant_drops.repository.FormatoRepository;
@@ -15,13 +15,8 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Comparator;
 import java.util.List;
-import java.util.UUID;
 
 @Controller
 @RequestMapping("/${admin.path}")
@@ -30,13 +25,11 @@ public class AdminController {
     @Autowired private FraganciasService fraganciaService;
     @Autowired private FraganciasRepository fraganciaRepository;
     @Autowired private FormatoRepository formatoRepository;
-    @Autowired private VentaRepository ventaRepository;
+    @Autowired private CloudinaryService cloudinaryService;
     @Value("${admin.path}") private String adminPath;
     @Value("${admin.user}") private String adminUser;
     @Value("${admin.password}") private String adminPassword;
     private final BCryptPasswordEncoder encoder;
-
-    private static final String UPLOAD_DIR = "uploads/images/perfumes/";
 
     public AdminController(BCryptPasswordEncoder encoder) { this.encoder = encoder; }
 
@@ -66,38 +59,38 @@ public class AdminController {
         fragancias.forEach(f -> f.getFormatos().sort(Comparator.comparingInt(Formato::getMl)));
         model.addAttribute("fragancias", fragancias);
         model.addAttribute("adminPath", adminPath);
-        model.addAttribute("ventas", ventaRepository.findAll());
-        model.addAttribute("gananciasSemana", ventaRepository.gananciasSemana());
-        model.addAttribute("gananciasMes", ventaRepository.gananciasMes());
-        model.addAttribute("gananciasAnio", ventaRepository.gananciasAnio());
         return "admin/dashboard";
     }
 
     @PostMapping("/guardar")
     public String guardar(@ModelAttribute Fragancia fragancia,
                           @RequestParam("imagenFile") MultipartFile imagenFile,
-                          HttpSession session) throws IOException {
+                          HttpSession session) {
         if (session.getAttribute("adminLogged") == null) return sinSesion();
 
-        if (fragancia.getId() != null) {
-            Fragancia existente = fraganciaService.buscarPorId(fragancia.getId());
-            fragancia.setDisponible(existente.getDisponible());
-            fragancia.setFormatos(existente.getFormatos());
-            if (imagenFile.isEmpty()) {
-                fragancia.setImagen(existente.getImagen());
+        try {
+            if (fragancia.getId() != null) {
+                Fragancia existente = fraganciaService.buscarPorId(fragancia.getId());
+                fragancia.setDisponible(existente.getDisponible());
+                fragancia.setFormatos(existente.getFormatos());
+                if (imagenFile.isEmpty()) {
+                    fragancia.setImagen(existente.getImagen());
+                } else {
+                    if (existente.getImagen() != null && existente.getImagen().startsWith("http")) {
+                        cloudinaryService.eliminarImagen(existente.getImagen());
+                    }
+                    String url = cloudinaryService.subirImagen(imagenFile);
+                    fragancia.setImagen(url);
+                }
+            } else {
+                fragancia.setDisponible(true);
+                if (!imagenFile.isEmpty()) {
+                    String url = cloudinaryService.subirImagen(imagenFile);
+                    fragancia.setImagen(url);
+                }
             }
-        } else {
-            fragancia.setDisponible(true);
-        }
-
-        if (!imagenFile.isEmpty()) {
-            String extension = imagenFile.getOriginalFilename()
-                    .substring(imagenFile.getOriginalFilename().lastIndexOf("."));
-            String nombreArchivo = UUID.randomUUID().toString() + extension;
-            Path ruta = Paths.get(UPLOAD_DIR + nombreArchivo);
-            Files.createDirectories(ruta.getParent());
-            Files.write(ruta, imagenFile.getBytes());
-            fragancia.setImagen(nombreArchivo);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
 
         fraganciaService.guardar(fragancia);

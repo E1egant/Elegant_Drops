@@ -11,7 +11,6 @@
 </head>
 <body>
 
-<!-- NAVBAR -->
 <nav class="h-24 premium-navbar flex justify-between items-center px-12 sticky top-0 z-50">
     <a th:href="@{/}" class="flex items-center gap-6">
         <img th:src="@{/images/logo-elegant.png}" alt="Logo" class="h-16 w-auto">
@@ -26,7 +25,6 @@
     </button>
 </nav>
 
-<!-- FILTROS -->
 <div class="sticky top-24 z-40 bg-[#111009]/95 backdrop-blur-md border-b border-white/[0.03]">
     <div class="container mx-auto px-12 py-5 flex gap-3 overflow-x-auto scrollbar-hide">
         <a th:href="@{/?filtro=todos}" th:class="${filtroActivo == 'todos'} ? 'filtro-btn activo' : 'filtro-btn'">Todos</a>
@@ -40,7 +38,6 @@
     </div>
 </div>
 
-<!-- CATÁLOGO -->
 <main class="container mx-auto px-12 py-16 pb-32">
     <div th:if="${#lists.isEmpty(fragancias)}" class="text-center py-32">
         <p class="text-zinc-600 text-sm uppercase tracking-widest">No hay fragancias disponibles en esta categoría</p>
@@ -60,10 +57,9 @@
              th:data-formatoids="${#strings.toString(f.formatos.![id.toString()].toString())}"
              class="tarjeta-perfume cursor-pointer">
 
-            <!-- IMAGEN -->
             <div class="imagen-perfume-container">
                 <img th:if="${f.imagen != null and !f.imagen.isEmpty()}"
-                     th:src="@{/{img}(img=${'images/perfumes/' + f.imagen})}"
+                     th:src="${f.imagen}"
                      class="imagen-perfume" alt="Perfume">
                 <div th:if="${f.imagen == null or f.imagen.isEmpty()}"
                      class="imagen-perfume-placeholder">
@@ -71,7 +67,6 @@
                 </div>
             </div>
 
-            <!-- INFO -->
             <div class="p-6">
                 <span class="text-item-brand block mb-1" th:text="${f.marca}"></span>
                 <h3 class="text-white font-bold text-lg uppercase tracking-wide mb-1" th:text="${f.nombre}"></h3>
@@ -83,7 +78,7 @@
                     <div>
                         <span class="text-zinc-500 text-[9px] uppercase tracking-widest">Desde</span>
                         <p class="text-white font-bold text-lg">
-                            $<span th:text="${f.formatos.isEmpty() ? '—' : f.formatos[0].precio}"></span>
+                            $<span th:text="${f.formatos.isEmpty() ? '—' : #numbers.formatInteger(f.formatos[0].precio, 0, 'DEFAULT')}"></span>
                         </p>
                     </div>
                     <div class="ver-mas-btn">
@@ -95,18 +90,15 @@
     </div>
 </main>
 
-<!-- MODAL DETALLE PERFUME -->
 <div id="modalDetalle" class="fixed inset-0 bg-black/90 hidden z-[100] flex items-center justify-center p-4 backdrop-blur-md">
     <div class="bg-[#1a1714] border border-white/10 rounded-[2rem] w-full max-w-2xl overflow-hidden">
         <div class="flex flex-col md:flex-row">
-            <!-- IMAGEN -->
             <div class="md:w-2/5 bg-[#111009] flex items-center justify-center p-10 min-h-64">
                 <img id="modalImagen" src="#" alt="Perfume" class="max-h-72 w-auto object-contain hidden">
                 <div id="modalImagenPlaceholder" class="flex items-center justify-center">
                     <i class="fas fa-spray-can text-5xl text-zinc-700"></i>
                 </div>
             </div>
-            <!-- DETALLE -->
             <div class="md:w-3/5 p-10 flex flex-col justify-between">
                 <div>
                     <button onclick="cerrarModal()" class="text-zinc-600 hover:text-white transition text-xs uppercase tracking-widest mb-6 flex items-center gap-2">
@@ -120,14 +112,10 @@
                         <span id="modalGenero" class="tag-badge"></span>
                     </div>
                     <p id="modalDescripcion" class="text-zinc-400 text-xs leading-relaxed italic mb-6"></p>
-
-                    <!-- SELECTOR ML -->
                     <div class="mb-6">
                         <p class="text-[9px] text-zinc-500 uppercase tracking-widest mb-3">Selecciona el tamaño</p>
                         <div id="modalFormatos" class="flex flex-wrap gap-2"></div>
                     </div>
-
-                    <!-- PRECIO -->
                     <div class="flex items-center justify-between mb-6">
                         <div>
                             <span class="text-zinc-500 text-[9px] uppercase tracking-widest">Precio</span>
@@ -135,7 +123,6 @@
                         </div>
                     </div>
                 </div>
-
                 <button onclick="agregarAlCarrito()" class="btn-luxury w-full py-4 text-xs uppercase tracking-widest">
                     <i class="fas fa-shopping-bag mr-2"></i> Agregar al carrito
                 </button>
@@ -144,7 +131,6 @@
     </div>
 </div>
 
-<!-- PANEL CARRITO -->
 <div id="panelCarrito" class="fixed top-0 right-0 h-full w-full max-w-sm bg-[#1a1714] border-l border-white/10 z-[200] transform translate-x-full transition-transform duration-300 flex flex-col">
     <div class="p-8 border-b border-white/[0.05] flex justify-between items-center">
         <h3 class="font-luxury text-white uppercase tracking-widest text-lg">Carrito</h3>

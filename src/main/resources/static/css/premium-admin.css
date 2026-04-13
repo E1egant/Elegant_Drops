@@ -238,3 +238,13 @@ tbody tr:hover { background: rgba(201, 150, 122, 0.02); }
 .tipo-entrega-btn:hover {
     border-color: rgba(201, 150, 122, 0.3) !important;
 }
+
+/* Quitar flechas de inputs number */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+input[type="number"] {
+    -moz-appearance: textfield;
+}

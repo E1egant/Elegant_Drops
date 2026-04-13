@@ -25,7 +25,7 @@ function abrirModal(card) {
     const imgEl = document.getElementById('modalImagen');
     const placeholderEl = document.getElementById('modalImagenPlaceholder');
     if (imagen && imagen !== 'null' && imagen !== '') {
-        imgEl.src = '/images/perfumes/' + imagen;
+        imgEl.src = imagen;
         imgEl.classList.remove('hidden');
         placeholderEl.classList.add('hidden');
     } else {

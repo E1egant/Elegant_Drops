@@ -23,6 +23,7 @@ public class Fragancia {
     private String genero;
     private String tipo;
     private String imagen;
+    private Integer orden;
 
     @Column(columnDefinition = "TEXT")
     private String descripcion;
