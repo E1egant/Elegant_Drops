@@ -119,6 +119,66 @@ public class CheckoutController {
         }
     }
 
+    @PostMapping("/checkout/pago-ficticio")
+    public String pagoFicticio(
+            @RequestParam String nombre,
+            @RequestParam String apellido,
+            @RequestParam String rut,
+            @RequestParam String telefono,
+            @RequestParam String correo,
+            @RequestParam String tipo,
+            @RequestParam(required = false) String direccion,
+            @RequestParam(required = false) String estacion,
+            @RequestParam String resumenPedido,
+            @RequestParam String total,
+            @RequestParam String itemsJson,
+            Model model) {
+
+        try {
+            int totalNumerico = 0;
+            StringBuilder detalle = new StringBuilder();
+
+            if (itemsJson != null) {
+                String[] itemsArray = itemsJson.split("\\|");
+                for (String itemStr : itemsArray) {
+                    String[] parts = itemStr.split(";");
+                    if (parts.length >= 4) {
+                        String itemNombre = parts[0];
+                        int cantidad = Integer.parseInt(parts[1]);
+                        int precio = Integer.parseInt(parts[2]);
+                        totalNumerico += precio * cantidad;
+                        detalle.append(cantidad).append("x ")
+                                .append(itemNombre)
+                                .append(" — $").append(precio * cantidad)
+                                .append("\n");
+                    }
+                }
+            }
+
+            Venta venta = new Venta();
+            venta.setFecha(LocalDateTime.now());
+            venta.setTotal(totalNumerico);
+            venta.setTipoEntrega(tipo);
+            venta.setCodigoTransaccion("TEST-" + System.currentTimeMillis());
+            venta.setDetalle(detalle.toString());
+            ventaRepository.save(venta);
+
+            String html = construirHtmlPedido(tipo, nombre, apellido, rut, telefono,
+                    correo, direccion, estacion, resumenPedido, total);
+            emailService.enviar(correo, "Elegant Drops · Confirmación de pedido (TEST)", html);
+            emailService.enviar(adminEmail, "Nuevo pedido TEST — " + nombre + " " + apellido, html);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        model.addAttribute("nombre", nombre);
+        model.addAttribute("correo", correo);
+        model.addAttribute("tipo", tipo);
+        model.addAttribute("total", total);
+        return "confirmacion";
+    }
+
     @GetMapping("/checkout/exito")
     public String exito(@RequestParam(required = false) String payment_id,
                         @RequestParam(required = false) String status,
@@ -137,7 +197,6 @@ public class CheckoutController {
         String itemsJson = (String) session.getAttribute("pedido_itemsJson");
 
         if (correo != null) {
-            // Registrar venta
             try {
                 int totalNumerico = 0;
                 StringBuilder detalle = new StringBuilder();
@@ -171,13 +230,11 @@ public class CheckoutController {
                 e.printStackTrace();
             }
 
-            // Enviar correos
             String html = construirHtmlPedido(tipo, nombre, apellido, rut, telefono,
                     correo, direccion, estacion, resumenPedido, total);
             emailService.enviar(correo, "Elegant Drops · Confirmación de pedido", html);
             emailService.enviar(adminEmail, "Nuevo pedido — " + nombre + " " + apellido, html);
 
-            // Limpiar sesión
             session.removeAttribute("pedido_nombre");
             session.removeAttribute("pedido_apellido");
             session.removeAttribute("pedido_rut");

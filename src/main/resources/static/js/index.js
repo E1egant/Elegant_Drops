@@ -167,15 +167,18 @@ function renderCarrito() {
 function toggleCarrito() {
     const panel = document.getElementById('panelCarrito');
     const overlay = document.getElementById('carritoOverlay');
+    const waBtn = document.querySelector('#whatsappBtn');
     const abierto = !panel.classList.contains('translate-x-full');
 
     if (abierto) {
         panel.classList.add('translate-x-full');
         overlay.classList.add('hidden');
+        if (waBtn) waBtn.classList.remove('hidden');
     } else {
         panel.classList.remove('translate-x-full');
         overlay.classList.remove('hidden');
         renderCarrito();
+        if (waBtn) waBtn.classList.add('hidden');
     }
 }
 

@@ -13,10 +13,10 @@
 
 <nav class="h-24 premium-navbar flex justify-between items-center px-12 sticky top-0 z-50">
     <a th:href="@{/}" class="flex items-center gap-6">
-        <img th:src="@{/images/logo-elegant.png}" alt="Logo" class="h-16 w-auto">
+        <img th:src="@{/images/logo-elegant.png}" alt="Logo" class="h-16 w-16 object-cover rounded-full border-2 border-[#c9967a] shadow-[0_0_15px_rgba(201,150,122,0.3)]">
         <div class="flex flex-col border-l pl-6 border-white/10">
             <span class="text-lg font-luxury text-white tracking-widest uppercase">Elegant Drops</span>
-            <span class="text-[8px] tracking-[0.4em] text-[#c9967a] font-bold uppercase mt-1">Decants & Fragrances</span>
+            <span class="text-[8px] tracking-[0.4em] text-[#c9967a] font-bold uppercase mt-1">Decants & Fragances</span>
         </div>
     </a>
     <button onclick="toggleCarrito()" class="relative text-zinc-400 hover:text-white transition">
@@ -154,8 +154,76 @@
 <div id="carritoOverlay" class="fixed inset-0 bg-black/50 hidden z-[199]" onclick="toggleCarrito()"></div>
 
 <footer class="border-t border-white/[0.03] py-16 text-center">
-    <p class="text-[9px] tracking-[0.6em] text-zinc-700 uppercase">Elegant Drops Chile · Excellence in Every Drop</p>
+    <p class="text-[9px] tracking-[0.6em] text-zinc-700 uppercase">Elegant Drops Chile · Exelencia en cada gota </p>
 </footer>
+
+<!-- WHATSAPP FLOTANTE -->
+<div id="whatsappBtn" class="fixed bottom-8 right-8 z-[300]">
+
+    <!-- PANEL EMERGENTE -->
+    <div id="waPanelMenu" class="hidden mb-4 bg-[#1a1714] border border-white/10 rounded-2xl overflow-hidden shadow-2xl w-72">
+        <div class="px-6 py-4 border-b border-white/[0.05]">
+            <p class="text-[9px] font-black text-[#c9967a] uppercase tracking-widest">¿En qué podemos ayudarte?</p>
+        </div>
+        <div class="divide-y divide-white/[0.04]">
+            <a href="https://wa.me/56982055029?text=Hola%2C%20quiero%20consultar%20sobre%20precios%20mayoristas%20para%20m%C3%A1s%20cantidad%20de%20ml%20%F0%9F%8C%BF"
+               target="_blank"
+               class="flex items-center gap-4 px-6 py-4 hover:bg-white/[0.03] transition group">
+                <div class="w-8 h-8 rounded-full bg-[#25D366]/10 flex items-center justify-center flex-shrink-0">
+                    <i class="fab fa-whatsapp text-[#25D366] text-sm"></i>
+                </div>
+                <div>
+                    <p class="text-white text-xs font-bold">¿Quieres más cantidad?</p>
+                    <p class="text-zinc-500 text-[10px] mt-0.5">Precio mayorista por WhatsApp</p>
+                </div>
+            </a>
+            <a href="https://wa.me/56982055029?text=Hola%2C%20estoy%20buscando%20un%20perfume%20que%20no%20est%C3%A1%20en%20la%20p%C3%A1gina%2C%20%C2%BFpueden%20conseguirlo%3F%20%F0%9F%8C%BF"
+               target="_blank"
+               class="flex items-center gap-4 px-6 py-4 hover:bg-white/[0.03] transition group">
+                <div class="w-8 h-8 rounded-full bg-[#25D366]/10 flex items-center justify-center flex-shrink-0">
+                    <i class="fab fa-whatsapp text-[#25D366] text-sm"></i>
+                </div>
+                <div>
+                    <p class="text-white text-xs font-bold">¿Buscas un perfume?</p>
+                    <p class="text-zinc-500 text-[10px] mt-0.5">Si no está en la lista, lo conseguimos</p>
+                </div>
+            </a>
+            <a href="https://wa.me/56982055029?text=Hola%2C%20tengo%20una%20duda%20sobre%20una%20fragancia%20%F0%9F%8C%BF"
+               target="_blank"
+               class="flex items-center gap-4 px-6 py-4 hover:bg-white/[0.03] transition group">
+                <div class="w-8 h-8 rounded-full bg-[#25D366]/10 flex items-center justify-center flex-shrink-0">
+                    <i class="fab fa-whatsapp text-[#25D366] text-sm"></i>
+                </div>
+                <div>
+                    <p class="text-white text-xs font-bold">¿Tienes dudas?</p>
+                    <p class="text-zinc-500 text-[10px] mt-0.5">Te asesoramos sobre cualquier fragancia</p>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <!-- BOTÓN -->
+    <button onclick="toggleWaPanel()"
+            class="flex items-center gap-3 bg-[#25D366] hover:bg-[#20b858] text-white px-5 py-3 rounded-full shadow-lg transition-all duration-300 hover:scale-105">
+        <i class="fab fa-whatsapp text-2xl"></i>
+        <span class="text-xs font-bold uppercase tracking-widest">Consultas</span>
+    </button>
+</div>
+
+<script>
+    function toggleWaPanel() {
+        const panel = document.getElementById('waPanelMenu');
+        panel.classList.toggle('hidden');
+    }
+
+    document.addEventListener('click', function(e) {
+        const panel = document.getElementById('waPanelMenu');
+        const boton = panel.nextElementSibling;
+        if (!panel.contains(e.target) && !boton.contains(e.target)) {
+            panel.classList.add('hidden');
+        }
+    });
+</script>
 
 <script th:src="@{/js/index.js}"></script>
 </body>
