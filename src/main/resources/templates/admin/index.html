@@ -11,38 +11,41 @@
 </head>
 <body>
 
-<nav class="h-24 premium-navbar flex justify-between items-center px-12 sticky top-0 z-50">
-    <a th:href="@{/}" class="flex items-center gap-6">
-        <img th:src="@{/images/logo-elegant.png}" alt="Logo" class="h-16 w-16 object-cover rounded-full border-2 border-[#c9967a] shadow-[0_0_15px_rgba(201,150,122,0.3)]">
-        <div class="flex flex-col border-l pl-6 border-white/10">
-            <span class="text-lg font-luxury text-white tracking-widest uppercase">Elegant Drops</span>
-            <span class="text-[8px] tracking-[0.4em] text-[#c9967a] font-bold uppercase mt-1">Decants & Fragances</span>
+<!-- NAVBAR -->
+<nav class="h-20 md:h-24 premium-navbar flex justify-between items-center px-4 md:px-12 sticky top-0 z-50">
+    <a th:href="@{/}" class="flex items-center gap-3 md:gap-6">
+        <img th:src="@{/images/logo-elegant.png}" alt="Logo" class="h-12 w-12 md:h-16 md:w-16 object-cover rounded-full border-2 border-[#c9967a] shadow-[0_0_15px_rgba(201,150,122,0.3)]">
+        <div class="flex flex-col border-l pl-3 md:pl-6 border-white/10">
+            <span class="text-sm md:text-lg font-luxury text-white tracking-widest uppercase">Elegant Drops</span>
+            <span class="text-[7px] md:text-[8px] tracking-[0.3em] md:tracking-[0.4em] text-[#c9967a] font-bold uppercase mt-1">Decants & Fragrances</span>
         </div>
     </a>
-    <button onclick="toggleCarrito()" class="relative text-zinc-400 hover:text-white transition">
+    <button onclick="toggleCarrito()" class="relative text-zinc-400 hover:text-white transition p-2">
         <i class="fas fa-shopping-bag text-xl"></i>
-        <span id="carritoCount" class="hidden absolute -top-2 -right-2 bg-[#c9967a] text-black text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center">0</span>
+        <span id="carritoCount" class="hidden absolute -top-1 -right-1 bg-[#c9967a] text-black text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center">0</span>
     </button>
 </nav>
 
-<div class="sticky top-24 z-40 bg-[#111009]/95 backdrop-blur-md border-b border-white/[0.03]">
-    <div class="container mx-auto px-12 py-5 flex gap-3 overflow-x-auto scrollbar-hide">
+<!-- FILTROS -->
+<div class="sticky top-20 md:top-24 z-40 bg-[#111009]/95 backdrop-blur-md border-b border-white/[0.03]">
+    <div class="container mx-auto px-4 md:px-12 py-4 md:py-5 flex gap-2 md:gap-3 overflow-x-auto scrollbar-hide">
         <a th:href="@{/?filtro=todos}" th:class="${filtroActivo == 'todos'} ? 'filtro-btn activo' : 'filtro-btn'">Todos</a>
         <a th:href="@{/?filtro=Nicho}" th:class="${filtroActivo == 'Nicho'} ? 'filtro-btn activo' : 'filtro-btn'">Nicho</a>
         <a th:href="@{/?filtro=Diseñador}" th:class="${filtroActivo == 'Diseñador'} ? 'filtro-btn activo' : 'filtro-btn'">Diseñador</a>
         <a th:href="@{/?filtro=Árabe}" th:class="${filtroActivo == 'Árabe'} ? 'filtro-btn activo' : 'filtro-btn'">Árabe</a>
-        <div class="w-px bg-white/10 mx-2"></div>
+        <div class="w-px bg-[#c9967a]/40 mx-1 md:mx-2 flex-shrink-0"></div>
         <a th:href="@{/?filtro=Hombre}" th:class="${filtroActivo == 'Hombre'} ? 'filtro-btn activo' : 'filtro-btn'">Hombre</a>
         <a th:href="@{/?filtro=Mujer}" th:class="${filtroActivo == 'Mujer'} ? 'filtro-btn activo' : 'filtro-btn'">Mujer</a>
         <a th:href="@{/?filtro=Unisex}" th:class="${filtroActivo == 'Unisex'} ? 'filtro-btn activo' : 'filtro-btn'">Unisex</a>
     </div>
 </div>
 
-<main class="container mx-auto px-12 py-16 pb-32">
+<!-- CATÁLOGO -->
+<main class="container mx-auto px-4 md:px-12 py-8 md:py-16 pb-32">
     <div th:if="${#lists.isEmpty(fragancias)}" class="text-center py-32">
         <p class="text-zinc-600 text-sm uppercase tracking-widest">No hay fragancias disponibles en esta categoría</p>
     </div>
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+    <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-8">
         <div th:each="f : ${fragancias}"
              onclick="abrirModal(this)"
              th:data-id="${f.id}"
@@ -67,17 +70,17 @@
                 </div>
             </div>
 
-            <div class="p-6">
+            <div class="p-3 md:p-6">
                 <span class="text-item-brand block mb-1" th:text="${f.marca}"></span>
-                <h3 class="text-white font-bold text-lg uppercase tracking-wide mb-1" th:text="${f.nombre}"></h3>
-                <div class="flex gap-2 mb-4">
+                <h3 class="text-white font-bold text-sm md:text-lg uppercase tracking-wide mb-1 leading-tight" th:text="${f.nombre}"></h3>
+                <div class="flex gap-1 md:gap-2 mb-3 md:mb-4 flex-wrap">
                     <span class="tag-badge" th:text="${f.concentracion}"></span>
                     <span class="tag-badge" th:if="${f.tipo != null and !f.tipo.isEmpty()}" th:text="${f.tipo}"></span>
                 </div>
                 <div class="flex justify-between items-center">
                     <div>
-                        <span class="text-zinc-500 text-[9px] uppercase tracking-widest">Desde</span>
-                        <p class="text-white font-bold text-lg">
+                        <span class="text-zinc-500 text-[8px] md:text-[9px] uppercase tracking-widest">Desde</span>
+                        <p class="text-white font-bold text-sm md:text-lg">
                             $<span th:text="${f.formatos.isEmpty() ? '—' : #numbers.formatInteger(f.formatos[0].precio, 0, 'DEFAULT')}"></span>
                         </p>
                     </div>
@@ -90,39 +93,74 @@
     </div>
 </main>
 
-<div id="modalDetalle" class="fixed inset-0 bg-black/90 hidden z-[100] flex items-center justify-center p-4 backdrop-blur-md">
-    <div class="bg-[#1a1714] border border-white/10 rounded-[2rem] w-full max-w-2xl overflow-hidden">
+<!-- SECCIÓN RESEÑAS -->
+<section class="container mx-auto px-4 md:px-12 pb-24" th:if="${!#lists.isEmpty(resenas)}">
+    <div class="mb-8 md:mb-12 text-center">
+        <h2 class="text-2xl md:text-3xl font-luxury text-white uppercase tracking-widest mb-4">Lo que dicen nuestros clientes</h2>
+        <div class="h-0.5 w-12 bg-[#c9967a] mx-auto"></div>
+    </div>
+
+    <div th:if="${resenaOk}" class="mb-8 p-4 rounded-2xl border border-[#c9967a]/30 bg-[#c9967a]/[0.05] text-center">
+        <p class="text-[#c9967a] text-xs uppercase tracking-widest font-bold">
+            <i class="fas fa-check mr-2"></i> ¡Gracias por tu reseña!
+        </p>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+        <div th:each="r : ${resenas}" class="card-perfume p-5 md:p-6">
+            <div class="flex gap-1 mb-3">
+                <th:block th:each="i : ${#numbers.sequence(1, 5)}">
+                    <i th:class="${i <= r.calificacion} ? 'fas fa-star text-[#c9967a] text-sm' : 'fas fa-star text-zinc-700 text-sm'"></i>
+                </th:block>
+            </div>
+            <p class="text-zinc-400 text-xs italic leading-relaxed mb-4" th:text="${r.comentario}"></p>
+            <div class="flex justify-between items-center">
+                <span class="text-white text-xs font-bold uppercase tracking-widest" th:text="${r.nombre}"></span>
+                <span class="text-zinc-600 text-[9px]" th:text="${#temporals.format(r.fecha, 'dd/MM/yyyy')}"></span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- MODAL DETALLE PERFUME -->
+<div id="modalDetalle" class="fixed inset-0 bg-black/90 hidden z-[100] flex items-center justify-center p-3 md:p-4 backdrop-blur-md overflow-y-auto">
+    <div class="bg-[#1a1714] border border-white/10 rounded-[1.5rem] md:rounded-[2rem] w-full max-w-2xl overflow-hidden my-auto">
         <div class="flex flex-col md:flex-row">
-            <div class="md:w-2/5 bg-[#111009] flex items-center justify-center p-10 min-h-64">
-                <img id="modalImagen" src="#" alt="Perfume" class="max-h-72 w-auto object-contain hidden">
+            <!-- IMAGEN -->
+            <div class="md:w-2/5 bg-[#111009] flex items-center justify-center p-6 md:p-10 min-h-48 md:min-h-64">
+                <img id="modalImagen" src="#" alt="Perfume" class="max-h-48 md:max-h-72 w-auto object-contain hidden">
                 <div id="modalImagenPlaceholder" class="flex items-center justify-center">
                     <i class="fas fa-spray-can text-5xl text-zinc-700"></i>
                 </div>
             </div>
-            <div class="md:w-3/5 p-10 flex flex-col justify-between">
+            <!-- DETALLE -->
+            <div class="md:w-3/5 p-6 md:p-10 flex flex-col justify-between">
                 <div>
-                    <button onclick="cerrarModal()" class="text-zinc-600 hover:text-white transition text-xs uppercase tracking-widest mb-6 flex items-center gap-2">
+                    <button onclick="cerrarModal()" class="text-zinc-600 hover:text-white transition text-xs uppercase tracking-widest mb-4 md:mb-6 flex items-center gap-2">
                         <i class="fas fa-times"></i> Cerrar
                     </button>
                     <span id="modalMarca" class="text-item-brand block mb-1"></span>
-                    <h2 id="modalNombre" class="text-white font-luxury text-2xl uppercase tracking-wide mb-2"></h2>
-                    <div class="flex gap-2 mb-4">
+                    <h2 id="modalNombre" class="text-white font-luxury text-xl md:text-2xl uppercase tracking-wide mb-2"></h2>
+                    <div class="flex gap-2 mb-3 md:mb-4 flex-wrap">
                         <span id="modalConcentracion" class="tag-badge"></span>
                         <span id="modalTipo" class="tag-badge"></span>
                         <span id="modalGenero" class="tag-badge"></span>
                     </div>
-                    <p id="modalDescripcion" class="text-zinc-400 text-xs leading-relaxed italic mb-6"></p>
-                    <div class="mb-6">
+                    <p id="modalDescripcion" class="text-zinc-400 text-xs leading-relaxed italic mb-4 md:mb-6"></p>
+
+                    <div class="mb-4 md:mb-6">
                         <p class="text-[9px] text-zinc-500 uppercase tracking-widest mb-3">Selecciona el tamaño</p>
                         <div id="modalFormatos" class="flex flex-wrap gap-2"></div>
                     </div>
-                    <div class="flex items-center justify-between mb-6">
+
+                    <div class="flex items-center justify-between mb-4 md:mb-6">
                         <div>
                             <span class="text-zinc-500 text-[9px] uppercase tracking-widest">Precio</span>
                             <p id="modalPrecio" class="text-white font-bold text-2xl">—</p>
                         </div>
                     </div>
                 </div>
+
                 <button onclick="agregarAlCarrito()" class="btn-luxury w-full py-4 text-xs uppercase tracking-widest">
                     <i class="fas fa-shopping-bag mr-2"></i> Agregar al carrito
                 </button>
@@ -131,18 +169,19 @@
     </div>
 </div>
 
+<!-- PANEL CARRITO -->
 <div id="panelCarrito" class="fixed top-0 right-0 h-full w-full max-w-sm bg-[#1a1714] border-l border-white/10 z-[200] transform translate-x-full transition-transform duration-300 flex flex-col">
-    <div class="p-8 border-b border-white/[0.05] flex justify-between items-center">
+    <div class="p-6 md:p-8 border-b border-white/[0.05] flex justify-between items-center">
         <h3 class="font-luxury text-white uppercase tracking-widest text-lg">Carrito</h3>
         <button onclick="toggleCarrito()" class="text-zinc-600 hover:text-white transition">
             <i class="fas fa-times text-lg"></i>
         </button>
     </div>
-    <div id="carritoItems" class="flex-1 overflow-y-auto p-8 space-y-4">
+    <div id="carritoItems" class="flex-1 overflow-y-auto p-6 md:p-8 space-y-4">
         <p id="carritoVacio" class="text-zinc-600 text-xs uppercase tracking-widest text-center py-8">Tu carrito está vacío</p>
     </div>
-    <div class="p-8 border-t border-white/[0.05]">
-        <div class="flex justify-between items-center mb-6">
+    <div class="p-6 md:p-8 border-t border-white/[0.05]">
+        <div class="flex justify-between items-center mb-4 md:mb-6">
             <span class="text-zinc-400 text-xs uppercase tracking-widest">Total</span>
             <span id="carritoTotal" class="text-white font-bold text-xl">$0</span>
         </div>
@@ -153,22 +192,20 @@
 </div>
 <div id="carritoOverlay" class="fixed inset-0 bg-black/50 hidden z-[199]" onclick="toggleCarrito()"></div>
 
-<footer class="border-t border-white/[0.03] py-16 text-center">
-    <p class="text-[9px] tracking-[0.6em] text-zinc-700 uppercase">Elegant Drops Chile · Exelencia en cada gota </p>
+<footer class="border-t border-white/[0.03] py-12 md:py-16 text-center px-4">
+    <p class="text-[9px] tracking-[0.2em] md:tracking-[0.6em] text-zinc-500 uppercase">Elegant Drops Chile · Excelencia en cada gota</p>
 </footer>
 
 <!-- WHATSAPP FLOTANTE -->
-<div id="whatsappBtn" class="fixed bottom-8 right-8 z-[300]">
-
-    <!-- PANEL EMERGENTE -->
-    <div id="waPanelMenu" class="hidden mb-4 bg-[#1a1714] border border-white/10 rounded-2xl overflow-hidden shadow-2xl w-72">
-        <div class="px-6 py-4 border-b border-white/[0.05]">
+<div id="whatsappBtn" class="fixed bottom-6 right-4 md:bottom-8 md:right-8 z-[300]">
+    <div id="waPanelMenu" class="hidden mb-4 bg-[#1a1714] border border-white/10 rounded-2xl overflow-hidden shadow-2xl w-64 md:w-72">
+        <div class="px-5 py-4 border-b border-white/[0.05]">
             <p class="text-[9px] font-black text-[#c9967a] uppercase tracking-widest">¿En qué podemos ayudarte?</p>
         </div>
         <div class="divide-y divide-white/[0.04]">
             <a href="https://wa.me/56982055029?text=Hola%2C%20quiero%20consultar%20sobre%20precios%20mayoristas%20para%20m%C3%A1s%20cantidad%20de%20ml%20%F0%9F%8C%BF"
                target="_blank"
-               class="flex items-center gap-4 px-6 py-4 hover:bg-white/[0.03] transition group">
+               class="flex items-center gap-3 px-5 py-4 hover:bg-white/[0.03] transition">
                 <div class="w-8 h-8 rounded-full bg-[#25D366]/10 flex items-center justify-center flex-shrink-0">
                     <i class="fab fa-whatsapp text-[#25D366] text-sm"></i>
                 </div>
@@ -179,7 +216,7 @@
             </a>
             <a href="https://wa.me/56982055029?text=Hola%2C%20estoy%20buscando%20un%20perfume%20que%20no%20est%C3%A1%20en%20la%20p%C3%A1gina%2C%20%C2%BFpueden%20conseguirlo%3F%20%F0%9F%8C%BF"
                target="_blank"
-               class="flex items-center gap-4 px-6 py-4 hover:bg-white/[0.03] transition group">
+               class="flex items-center gap-3 px-5 py-4 hover:bg-white/[0.03] transition">
                 <div class="w-8 h-8 rounded-full bg-[#25D366]/10 flex items-center justify-center flex-shrink-0">
                     <i class="fab fa-whatsapp text-[#25D366] text-sm"></i>
                 </div>
@@ -190,7 +227,7 @@
             </a>
             <a href="https://wa.me/56982055029?text=Hola%2C%20tengo%20una%20duda%20sobre%20una%20fragancia%20%F0%9F%8C%BF"
                target="_blank"
-               class="flex items-center gap-4 px-6 py-4 hover:bg-white/[0.03] transition group">
+               class="flex items-center gap-3 px-5 py-4 hover:bg-white/[0.03] transition">
                 <div class="w-8 h-8 rounded-full bg-[#25D366]/10 flex items-center justify-center flex-shrink-0">
                     <i class="fab fa-whatsapp text-[#25D366] text-sm"></i>
                 </div>
@@ -202,9 +239,8 @@
         </div>
     </div>
 
-    <!-- BOTÓN -->
     <button onclick="toggleWaPanel()"
-            class="flex items-center gap-3 bg-[#25D366] hover:bg-[#20b858] text-white px-5 py-3 rounded-full shadow-lg transition-all duration-300 hover:scale-105">
+            class="flex items-center gap-3 bg-[#25D366] hover:bg-[#20b858] text-white px-4 md:px-5 py-3 rounded-full shadow-lg transition-all duration-300 hover:scale-105">
         <i class="fab fa-whatsapp text-2xl"></i>
         <span class="text-xs font-bold uppercase tracking-widest">Consultas</span>
     </button>

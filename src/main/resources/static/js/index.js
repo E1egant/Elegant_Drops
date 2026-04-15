@@ -51,6 +51,9 @@ function abrirModal(card) {
     }
 
     document.getElementById('modalDetalle').classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+    const waBtn = document.getElementById('whatsappBtn');
+    if (waBtn) waBtn.classList.add('hidden');
 }
 
 function seleccionarFormato(btn, ml, precio, id, nombre, marca) {
@@ -62,7 +65,10 @@ function seleccionarFormato(btn, ml, precio, id, nombre, marca) {
 
 function cerrarModal() {
     document.getElementById('modalDetalle').classList.add('hidden');
+    document.body.style.overflow = '';
     formatoSeleccionado = null;
+    const waBtn = document.getElementById('whatsappBtn');
+    if (waBtn) waBtn.classList.remove('hidden');
 }
 
 function agregarAlCarrito() {
@@ -167,16 +173,18 @@ function renderCarrito() {
 function toggleCarrito() {
     const panel = document.getElementById('panelCarrito');
     const overlay = document.getElementById('carritoOverlay');
-    const waBtn = document.querySelector('#whatsappBtn');
+    const waBtn = document.getElementById('whatsappBtn');
     const abierto = !panel.classList.contains('translate-x-full');
 
     if (abierto) {
         panel.classList.add('translate-x-full');
         overlay.classList.add('hidden');
+        document.body.style.overflow = '';
         if (waBtn) waBtn.classList.remove('hidden');
     } else {
         panel.classList.remove('translate-x-full');
         overlay.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
         renderCarrito();
         if (waBtn) waBtn.classList.add('hidden');
     }
@@ -190,6 +198,20 @@ function irAlCheckout() {
 
 document.getElementById('modalDetalle').addEventListener('click', function(e) {
     if (e.target === this) cerrarModal();
+});
+
+window.addEventListener('scroll', function() {
+    const waBtn = document.getElementById('whatsappBtn');
+    if (!waBtn) return;
+    const footer = document.querySelector('footer');
+    if (!footer) return;
+    const footerTop = footer.getBoundingClientRect().top;
+    const windowHeight = window.innerHeight;
+    if (footerTop < windowHeight) {
+        waBtn.classList.add('hidden');
+    } else {
+        waBtn.classList.remove('hidden');
+    }
 });
 
 renderCarrito();

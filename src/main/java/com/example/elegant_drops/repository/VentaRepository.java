@@ -9,6 +9,8 @@ import java.util.List;
 @Repository
 public interface VentaRepository extends JpaRepository<Venta, Long> {
 
+    List<Venta> findAllByOrderByFechaDesc();
+
     @Query("SELECT COALESCE(SUM(v.total), 0) FROM Venta v WHERE WEEK(v.fecha) = WEEK(CURRENT_DATE) AND YEAR(v.fecha) = YEAR(CURRENT_DATE)")
     Integer gananciasSemana();
 

@@ -12,7 +12,7 @@
 
 <nav class="h-24 premium-navbar flex justify-between items-center px-12 sticky top-0 z-50">
     <a th:href="@{/}" class="flex items-center gap-6">
-        <img th:src="@{/images/logo-elegant.png}" alt="Logo" class="h-16 w-auto">
+        <img th:src="@{/images/logo-elegant.png}" alt="Logo" class="h-16 w-16 object-cover rounded-full border-2 border-[#c9967a] shadow-[0_0_15px_rgba(201,150,122,0.3)]">
         <div class="flex flex-col border-l pl-6 border-white/10">
             <span class="text-lg font-luxury text-white tracking-widest uppercase">Elegant Drops</span>
             <span class="text-[8px] tracking-[0.4em] text-[#c9967a] font-bold uppercase mt-1">Decants & Fragrances</span>
@@ -20,7 +20,7 @@
     </a>
 </nav>
 
-<main class="container mx-auto px-8 py-32 max-w-lg text-center">
+<main class="container mx-auto px-8 py-16 max-w-lg text-center">
     <div class="mb-8">
         <div class="w-20 h-20 rounded-full bg-[#c9967a]/10 border border-[#c9967a]/30 flex items-center justify-center mx-auto mb-8">
             <i class="fas fa-check text-[#c9967a] text-2xl"></i>
@@ -48,6 +48,34 @@
         </div>
     </div>
 
+    <!-- FORMULARIO RESEÑA -->
+    <div class="card-perfume p-8 text-left mb-8">
+        <h3 class="text-[10px] font-black text-[#c9967a] uppercase tracking-widest mb-6">¿Cómo fue tu experiencia?</h3>
+        <form th:action="@{/resena/guardar}" method="post" class="space-y-4">
+            <input type="hidden" name="codigoTransaccion" th:value="${codigoTransaccion}">
+            <input type="text" name="nombre" th:value="${nombre}" placeholder="Tu nombre" required class="input-premium w-full">
+
+            <!-- ESTRELLAS -->
+            <div>
+                <p class="text-[9px] text-zinc-500 uppercase tracking-widest mb-3">Calificación</p>
+                <div class="flex gap-2" id="estrellas">
+                    <input type="hidden" name="calificacion" id="calificacionInput" value="5">
+                    <i class="fas fa-star text-[#c9967a] text-2xl cursor-pointer estrella" data-valor="1"></i>
+                    <i class="fas fa-star text-[#c9967a] text-2xl cursor-pointer estrella" data-valor="2"></i>
+                    <i class="fas fa-star text-[#c9967a] text-2xl cursor-pointer estrella" data-valor="3"></i>
+                    <i class="fas fa-star text-[#c9967a] text-2xl cursor-pointer estrella" data-valor="4"></i>
+                    <i class="fas fa-star text-[#c9967a] text-2xl cursor-pointer estrella" data-valor="5"></i>
+                </div>
+            </div>
+
+            <textarea name="comentario" rows="3" placeholder="Cuéntanos tu experiencia..." required class="input-premium w-full"></textarea>
+
+            <button type="submit" class="btn-luxury w-full py-4 text-xs uppercase tracking-widest">
+                <i class="fas fa-paper-plane mr-2"></i> Enviar reseña
+            </button>
+        </form>
+    </div>
+
     <div class="space-y-4">
         <a href="https://wa.me/56982055029" target="_blank" class="flex items-center justify-center gap-3 w-full py-4 rounded-2xl border border-white/10 bg-[#1a1714] text-white hover:border-[#c9967a]/30 transition">
             <i class="fab fa-whatsapp text-green-500 text-xl"></i>
@@ -59,10 +87,58 @@
     </div>
 </main>
 
-<footer class="border-t border-white/[0.03] py-16 text-center">
-    <p class="text-[9px] tracking-[0.6em] text-zinc-700 uppercase">Elegant Drops Chile · Excellence in Every Drop</p>
+<footer class="border-t border-white/[0.03] py-12 md:py-16 text-center px-4">
+    <p class="text-[9px] tracking-[0.2em] md:tracking-[0.6em] text-zinc-500 uppercase">Elegant Drops Chile · Excelencia en cada gota</p>
 </footer>
 
-<script>sessionStorage.removeItem('carrito');</script>
+<script>
+    sessionStorage.removeItem('carrito');
+
+    // Estrellas interactivas
+    const estrellas = document.querySelectorAll('.estrella');
+    const calificacionInput = document.getElementById('calificacionInput');
+
+    estrellas.forEach(estrella => {
+        estrella.addEventListener('click', () => {
+            const valor = parseInt(estrella.getAttribute('data-valor'));
+            calificacionInput.value = valor;
+            estrellas.forEach((e, i) => {
+                if (i < valor) {
+                    e.classList.remove('text-zinc-600');
+                    e.classList.add('text-[#c9967a]');
+                } else {
+                    e.classList.remove('text-[#c9967a]');
+                    e.classList.add('text-zinc-600');
+                }
+            });
+        });
+
+        estrella.addEventListener('mouseover', () => {
+            const valor = parseInt(estrella.getAttribute('data-valor'));
+            estrellas.forEach((e, i) => {
+                if (i < valor) {
+                    e.classList.add('text-[#c9967a]');
+                    e.classList.remove('text-zinc-600');
+                } else {
+                    e.classList.remove('text-[#c9967a]');
+                    e.classList.add('text-zinc-600');
+                }
+            });
+        });
+    });
+
+    document.getElementById('estrellas').addEventListener('mouseleave', () => {
+        const valor = parseInt(calificacionInput.value);
+        estrellas.forEach((e, i) => {
+            if (i < valor) {
+                e.classList.add('text-[#c9967a]');
+                e.classList.remove('text-zinc-600');
+            } else {
+                e.classList.remove('text-[#c9967a]');
+                e.classList.add('text-zinc-600');
+            }
+        });
+    });
+</script>
 </body>
 </html>

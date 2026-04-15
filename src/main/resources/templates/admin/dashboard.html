@@ -33,11 +33,16 @@
                 class="tab-btn py-5 text-[10px] font-black uppercase tracking-widest border-b-2 border-transparent text-zinc-600 transition">
             Ventas
         </button>
+        <button onclick="mostrarSeccion('resenas')" id="tabResenas"
+                class="tab-btn py-5 text-[10px] font-black uppercase tracking-widest border-b-2 border-transparent text-zinc-600 transition">
+            Reseñas
+        </button>
     </div>
 </div>
 
 <main class="container mx-auto mt-12 px-10 pb-32">
 
+    <!-- SECCIÓN INVENTARIO -->
     <div id="seccionInventario">
         <div class="flex justify-between items-end mb-16">
             <div>
@@ -50,77 +55,77 @@
         <div class="card-perfume overflow-hidden">
             <table class="w-full text-left">
                 <thead>
-                    <tr class="table-header border-b border-white/[0.03]">
-                        <th class="px-8 py-6">Orden</th>
-                        <th class="px-8 py-6">Estado</th>
-                        <th class="px-8 py-6">Fragancia</th>
-                        <th class="px-8 py-6">Formatos</th>
-                        <th class="px-8 py-6 text-right">Acciones</th>
-                    </tr>
+                <tr class="table-header border-b border-white/[0.03]">
+                    <th class="px-8 py-6">Orden</th>
+                    <th class="px-8 py-6">Estado</th>
+                    <th class="px-8 py-6">Fragancia</th>
+                    <th class="px-8 py-6">Formatos</th>
+                    <th class="px-8 py-6 text-right">Acciones</th>
+                </tr>
                 </thead>
                 <tbody class="divide-y divide-white/[0.02]">
-                    <tr th:each="f : ${fragancias}" class="hover:bg-white/[0.01] transition-colors">
+                <tr th:each="f : ${fragancias}" class="hover:bg-white/[0.01] transition-colors">
 
-                        <td class="px-8 py-8">
-                            <span class="text-zinc-500 text-sm font-bold" th:text="${f.orden != null ? f.orden : '—'}"></span>
-                        </td>
+                    <td class="px-8 py-8">
+                        <span class="text-zinc-500 text-sm font-bold" th:text="${f.orden != null ? f.orden : '—'}"></span>
+                    </td>
 
-                        <td class="px-8 py-8">
-                            <a th:href="@{/{path}/toggle/{id}(path=${adminPath}, id=${f.id})}"
-                               th:class="${f.disponible} ? 'badge-stock disponible' : 'badge-stock agotado'">
-                                [[${f.disponible ? 'En Stock' : 'Agotado'}]]
-                            </a>
-                        </td>
+                    <td class="px-8 py-8">
+                        <a th:href="@{/{path}/toggle/{id}(path=${adminPath}, id=${f.id})}"
+                           th:class="${f.disponible} ? 'badge-stock disponible' : 'badge-stock agotado'">
+                            [[${f.disponible ? 'En Stock' : 'Agotado'}]]
+                        </a>
+                    </td>
 
-                        <td class="px-8 py-8">
-                            <div class="flex items-start gap-6">
-                                <img th:if="${f.imagen != null and !f.imagen.isEmpty()}"
-                                     th:src="${f.imagen}"
-                                     class="h-20 w-16 object-cover rounded-lg border border-white/10 flex-shrink-0"
-                                     alt="Imagen perfume">
-                                <div th:if="${f.imagen == null or f.imagen.isEmpty()}"
-                                     class="h-20 w-16 rounded-lg border border-white/5 bg-white/[0.02] flex items-center justify-center flex-shrink-0">
-                                    <i class="fas fa-image text-zinc-700 text-lg"></i>
-                                </div>
-                                <div>
-                                    <span class="text-item-brand block mb-1" th:text="${f.marca}"></span>
-                                    <span class="text-item-title block" th:text="${f.nombre}"></span>
-                                    <div class="flex gap-3 mt-1">
-                                        <span class="text-zinc-300 text-[10px] uppercase tracking-widest font-semibold" th:text="${f.concentracion}"></span>
-                                        <span class="text-zinc-300 text-[10px] uppercase tracking-widest font-semibold"
-                                              th:if="${f.genero != null and !f.genero.isEmpty()}"
-                                              th:text="'· ' + ${f.genero}"></span>
-                                        <span class="text-zinc-300 text-[10px] uppercase tracking-widest font-semibold"
-                                              th:if="${f.tipo != null and !f.tipo.isEmpty()}"
-                                              th:text="'· ' + ${f.tipo}"></span>
-                                    </div>
-                                    <p class="text-zinc-300 text-[11px] italic mt-2 max-w-xs leading-relaxed font-light" th:text="${f.descripcion}"></p>
-                                </div>
+                    <td class="px-8 py-8">
+                        <div class="flex items-start gap-6">
+                            <img th:if="${f.imagen != null and !f.imagen.isEmpty()}"
+                                 th:src="${f.imagen}"
+                                 class="h-20 w-16 object-cover rounded-lg border border-white/10 flex-shrink-0"
+                                 alt="Imagen perfume">
+                            <div th:if="${f.imagen == null or f.imagen.isEmpty()}"
+                                 class="h-20 w-16 rounded-lg border border-white/5 bg-white/[0.02] flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-image text-zinc-700 text-lg"></i>
                             </div>
-                        </td>
-
-                        <td class="px-8 py-8">
-                            <div class="flex flex-wrap gap-2 items-center">
-                                <div th:each="formato : ${f.formatos}" class="flex items-center gap-1">
-                                    <span class="format-badge">[[${formato.ml}]]ml · $[[${formato.precio}]]</span>
-                                    <a th:href="@{/{path}/formato/eliminar/{id}(path=${adminPath}, id=${formato.id})}"
-                                       class="text-zinc-600 hover:text-red-500 transition text-[10px] ml-1"
-                                       onclick="return confirm('¿Eliminar este formato?')">
-                                        <i class="fas fa-times"></i>
-                                    </a>
+                            <div>
+                                <span class="text-item-brand block mb-1" th:text="${f.marca}"></span>
+                                <span class="text-item-title block" th:text="${f.nombre}"></span>
+                                <div class="flex gap-3 mt-1">
+                                    <span class="text-zinc-300 text-[10px] uppercase tracking-widest font-semibold" th:text="${f.concentracion}"></span>
+                                    <span class="text-zinc-300 text-[10px] uppercase tracking-widest font-semibold"
+                                          th:if="${f.genero != null and !f.genero.isEmpty()}"
+                                          th:text="'· ' + ${f.genero}"></span>
+                                    <span class="text-zinc-300 text-[10px] uppercase tracking-widest font-semibold"
+                                          th:if="${f.tipo != null and !f.tipo.isEmpty()}"
+                                          th:text="'· ' + ${f.tipo}"></span>
                                 </div>
-                                <button th:data-id="${f.id}" th:data-nombre="${f.nombre}"
-                                        onclick="handleOpenFormato(this)"
-                                        class="text-[#c9967a] hover:scale-125 transition ml-1"
-                                        title="Agregar formato">
-                                    <i class="fas fa-plus-circle"></i>
-                                </button>
+                                <p class="text-zinc-300 text-[11px] italic mt-2 max-w-xs leading-relaxed font-light" th:text="${f.descripcion}"></p>
                             </div>
-                        </td>
+                        </div>
+                    </td>
 
-                        <td class="px-8 py-8 text-right">
-                            <div class="flex justify-end gap-6">
-                                <button
+                    <td class="px-8 py-8">
+                        <div class="flex flex-wrap gap-2 items-center">
+                            <div th:each="formato : ${f.formatos}" class="flex items-center gap-1">
+                                <span class="format-badge">[[${formato.ml}]]ml · $[[${formato.precio}]]</span>
+                                <a th:href="@{/{path}/formato/eliminar/{id}(path=${adminPath}, id=${formato.id})}"
+                                   class="text-zinc-600 hover:text-red-500 transition text-[10px] ml-1"
+                                   onclick="return confirm('¿Eliminar este formato?')">
+                                    <i class="fas fa-times"></i>
+                                </a>
+                            </div>
+                            <button th:data-id="${f.id}" th:data-nombre="${f.nombre}"
+                                    onclick="handleOpenFormato(this)"
+                                    class="text-[#c9967a] hover:scale-125 transition ml-1"
+                                    title="Agregar formato">
+                                <i class="fas fa-plus-circle"></i>
+                            </button>
+                        </div>
+                    </td>
+
+                    <td class="px-8 py-8 text-right">
+                        <div class="flex justify-end gap-6">
+                            <button
                                     th:data-id="${f.id}"
                                     th:data-nombre="${f.nombre}"
                                     th:data-marca="${f.marca}"
@@ -132,22 +137,23 @@
                                     onclick="editFragancia(this)"
                                     class="action-btn"
                                     title="Editar">
-                                    <i class="fas fa-pen-nib"></i>
-                                </button>
-                                <a th:href="@{/{path}/eliminar/{id}(path=${adminPath}, id=${f.id})}"
-                                   class="action-btn danger"
-                                   onclick="return confirm('¿Eliminar este perfume y todos sus formatos?')"
-                                   title="Eliminar">
-                                    <i class="fas fa-trash-alt"></i>
-                                </a>
-                            </div>
-                        </td>
-                    </tr>
+                                <i class="fas fa-pen-nib"></i>
+                            </button>
+                            <a th:href="@{/{path}/eliminar/{id}(path=${adminPath}, id=${f.id})}"
+                               class="action-btn danger"
+                               onclick="return confirm('¿Eliminar este perfume y todos sus formatos?')"
+                               title="Eliminar">
+                                <i class="fas fa-trash-alt"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
                 </tbody>
             </table>
         </div>
     </div>
 
+    <!-- SECCIÓN VENTAS -->
     <div id="seccionVentas" class="hidden">
         <div class="mb-16">
             <div>
@@ -173,38 +179,96 @@
         <div class="card-perfume overflow-hidden">
             <table class="w-full text-left">
                 <thead>
-                    <tr class="table-header border-b border-white/[0.03]">
-                        <th class="px-8 py-6">Fecha</th>
-                        <th class="px-8 py-6">Detalle</th>
-                        <th class="px-8 py-6">Entrega</th>
-                        <th class="px-8 py-6">Transacción</th>
-                        <th class="px-8 py-6 text-right">Total</th>
-                    </tr>
+                <tr class="table-header border-b border-white/[0.03]">
+                    <th class="px-8 py-6">Fecha</th>
+                    <th class="px-8 py-6">Detalle</th>
+                    <th class="px-8 py-6">Entrega</th>
+                    <th class="px-8 py-6">Transacción</th>
+                    <th class="px-8 py-6 text-right">Total</th>
+                </tr>
                 </thead>
                 <tbody class="divide-y divide-white/[0.02]">
-                    <tr th:if="${#lists.isEmpty(ventas)}">
-                        <td colspan="5" class="px-8 py-16 text-center text-zinc-600 text-xs uppercase tracking-widest">
-                            Aún no hay ventas registradas
-                        </td>
-                    </tr>
-                    <tr th:each="v : ${ventas}" class="hover:bg-white/[0.01] transition-colors">
-                        <td class="px-8 py-6">
-                            <p class="text-white text-sm font-bold" th:text="${#temporals.format(v.fecha, 'dd/MM/yyyy')}"></p>
-                            <p class="text-zinc-500 text-[10px]" th:text="${#temporals.format(v.fecha, 'HH:mm')}"></p>
-                        </td>
-                        <td class="px-8 py-6">
-                            <p class="text-zinc-300 text-[11px] leading-relaxed whitespace-pre-line" th:text="${v.detalle}"></p>
-                        </td>
-                        <td class="px-8 py-6">
-                            <span class="format-badge" th:text="${v.tipoEntrega.equals('envio') ? 'Envío' : 'Retiro'}"></span>
-                        </td>
-                        <td class="px-8 py-6">
-                            <p class="text-zinc-500 text-[10px] font-mono" th:text="${v.codigoTransaccion}"></p>
-                        </td>
-                        <td class="px-8 py-6 text-right">
-                            <p class="text-white font-bold">$<span th:text="${#numbers.formatInteger(v.total, 0, 'COMMA')}"></span></p>
-                        </td>
-                    </tr>
+                <tr th:if="${#lists.isEmpty(ventas)}">
+                    <td colspan="5" class="px-8 py-16 text-center text-zinc-600 text-xs uppercase tracking-widest">
+                        Aún no hay ventas registradas
+                    </td>
+                </tr>
+                <tr th:each="v : ${ventas}" class="hover:bg-white/[0.01] transition-colors">
+                    <td class="px-8 py-6">
+                        <p class="text-white text-sm font-bold" th:text="${#temporals.format(v.fecha, 'dd/MM/yyyy')}"></p>
+                        <p class="text-zinc-500 text-[10px]" th:text="${#temporals.format(v.fecha, 'HH:mm')}"></p>
+                    </td>
+                    <td class="px-8 py-6">
+                        <p class="text-zinc-300 text-[11px] leading-relaxed whitespace-pre-line" th:text="${v.detalle}"></p>
+                    </td>
+                    <td class="px-8 py-6">
+                        <span class="format-badge" th:text="${v.tipoEntrega.equals('envio') ? 'Envío' : 'Retiro'}"></span>
+                    </td>
+                    <td class="px-8 py-6">
+                        <p class="text-zinc-500 text-[10px] font-mono" th:text="${v.codigoTransaccion}"></p>
+                    </td>
+                    <td class="px-8 py-6 text-right">
+                        <p class="text-white font-bold">$<span th:text="${#numbers.formatInteger(v.total, 0, 'COMMA')}"></span></p>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- SECCIÓN RESEÑAS -->
+    <div id="seccionResenas" class="hidden">
+        <div class="mb-16">
+            <div>
+                <h2 class="text-4xl font-luxury text-white uppercase tracking-tight">Reseñas</h2>
+                <div class="h-0.5 w-12 bg-[#c9967a] mt-4"></div>
+            </div>
+        </div>
+
+        <div class="card-perfume overflow-hidden">
+            <table class="w-full text-left">
+                <thead>
+                <tr class="table-header border-b border-white/[0.03]">
+                    <th class="px-8 py-6">Fecha</th>
+                    <th class="px-8 py-6">Cliente</th>
+                    <th class="px-8 py-6">Calificación</th>
+                    <th class="px-8 py-6">Comentario</th>
+                    <th class="px-8 py-6 text-right">Acciones</th>
+                </tr>
+                </thead>
+                <tbody class="divide-y divide-white/[0.02]">
+                <tr th:if="${#lists.isEmpty(resenas)}">
+                    <td colspan="5" class="px-8 py-16 text-center text-zinc-600 text-xs uppercase tracking-widest">
+                        Aún no hay reseñas registradas
+                    </td>
+                </tr>
+                <tr th:each="r : ${resenas}" class="hover:bg-white/[0.01] transition-colors">
+                    <td class="px-8 py-6">
+                        <p class="text-white text-sm font-bold" th:text="${#temporals.format(r.fecha, 'dd/MM/yyyy')}"></p>
+                        <p class="text-zinc-500 text-[10px]" th:text="${#temporals.format(r.fecha, 'HH:mm')}"></p>
+                    </td>
+                    <td class="px-8 py-6">
+                        <p class="text-white text-sm font-bold uppercase tracking-widest" th:text="${r.nombre}"></p>
+                    </td>
+                    <td class="px-8 py-6">
+                        <div class="flex gap-1">
+                            <th:block th:each="i : ${#numbers.sequence(1, 5)}">
+                                <i th:class="${i <= r.calificacion} ? 'fas fa-star text-[#c9967a] text-sm' : 'fas fa-star text-zinc-700 text-sm'"></i>
+                            </th:block>
+                        </div>
+                    </td>
+                    <td class="px-8 py-6">
+                        <p class="text-zinc-300 text-[11px] italic leading-relaxed max-w-sm" th:text="${r.comentario}"></p>
+                    </td>
+                    <td class="px-8 py-6 text-right">
+                        <a th:href="@{/{path}/resena/eliminar/{id}(path=${adminPath}, id=${r.id})}"
+                           class="action-btn danger"
+                           onclick="return confirm('¿Eliminar esta reseña?')"
+                           title="Eliminar">
+                            <i class="fas fa-trash-alt"></i>
+                        </a>
+                    </td>
+                </tr>
                 </tbody>
             </table>
         </div>
@@ -294,18 +358,27 @@
 
 <script th:src="@{/js/admin-logic.js}"></script>
 <script>
-function mostrarSeccion(seccion) {
-    document.getElementById('seccionInventario').classList.add('hidden');
-    document.getElementById('seccionVentas').classList.add('hidden');
-    document.getElementById('tabInventario').classList.remove('border-[#c9967a]', 'text-[#c9967a]');
-    document.getElementById('tabInventario').classList.add('border-transparent', 'text-zinc-600');
-    document.getElementById('tabVentas').classList.remove('border-[#c9967a]', 'text-[#c9967a]');
-    document.getElementById('tabVentas').classList.add('border-transparent', 'text-zinc-600');
+    function mostrarSeccion(seccion) {
+        document.getElementById('seccionInventario').classList.add('hidden');
+        document.getElementById('seccionVentas').classList.add('hidden');
+        document.getElementById('seccionResenas').classList.add('hidden');
+        document.getElementById('tabInventario').classList.remove('border-[#c9967a]', 'text-[#c9967a]');
+        document.getElementById('tabInventario').classList.add('border-transparent', 'text-zinc-600');
+        document.getElementById('tabVentas').classList.remove('border-[#c9967a]', 'text-[#c9967a]');
+        document.getElementById('tabVentas').classList.add('border-transparent', 'text-zinc-600');
+        document.getElementById('tabResenas').classList.remove('border-[#c9967a]', 'text-[#c9967a]');
+        document.getElementById('tabResenas').classList.add('border-transparent', 'text-zinc-600');
 
-    document.getElementById('seccion' + seccion.charAt(0).toUpperCase() + seccion.slice(1)).classList.remove('hidden');
-    document.getElementById('tab' + seccion.charAt(0).toUpperCase() + seccion.slice(1)).classList.add('border-[#c9967a]', 'text-[#c9967a]');
-    document.getElementById('tab' + seccion.charAt(0).toUpperCase() + seccion.slice(1)).classList.remove('border-transparent', 'text-zinc-600');
-}
+        document.getElementById('seccion' + seccion.charAt(0).toUpperCase() + seccion.slice(1)).classList.remove('hidden');
+        document.getElementById('tab' + seccion.charAt(0).toUpperCase() + seccion.slice(1)).classList.add('border-[#c9967a]', 'text-[#c9967a]');
+        document.getElementById('tab' + seccion.charAt(0).toUpperCase() + seccion.slice(1)).classList.remove('border-transparent', 'text-zinc-600');
+    }
+
+    // Abrir tab de reseñas si viene de eliminar una reseña
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('tab') === 'resenas') {
+        mostrarSeccion('resenas');
+    }
 </script>
 </body>
 </html>

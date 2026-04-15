@@ -25,15 +25,8 @@ function seleccionarTipo(tipo) {
 async function iniciarPago(e) {
     e.preventDefault();
 
-    if (!tipoSeleccionado) {
-        alert('Por favor selecciona un tipo de entrega');
-        return;
-    }
-
-    if (carrito.length === 0) {
-        alert('Tu carrito está vacío');
-        return;
-    }
+    if (!tipoSeleccionado) { alert('Por favor selecciona un tipo de entrega'); return; }
+    if (carrito.length === 0) { alert('Tu carrito está vacío'); return; }
 
     const nombre = document.getElementById('inputNombre').value.trim();
     const apellido = document.getElementById('inputApellido').value.trim();
@@ -48,18 +41,12 @@ async function iniciarPago(e) {
 
     if (tipoSeleccionado === 'envio') {
         const direccion = document.getElementById('inputDireccion').value.trim();
-        if (!direccion) {
-            alert('Por favor ingresa tu dirección de envío');
-            return;
-        }
+        if (!direccion) { alert('Por favor ingresa tu dirección de envío'); return; }
     }
 
     if (tipoSeleccionado === 'retiro') {
         const estacion = document.getElementById('inputEstacion').value;
-        if (!estacion) {
-            alert('Por favor selecciona una estación de retiro');
-            return;
-        }
+        if (!estacion) { alert('Por favor selecciona una estación de retiro'); return; }
     }
 
     let resumenHtml = '';
@@ -117,6 +104,65 @@ async function iniciarPago(e) {
         btn.innerText = 'Pagar con MercadoPago';
         btn.disabled = false;
     }
+}
+
+async function pagoFicticio(e) {
+    e.preventDefault();
+
+    if (!tipoSeleccionado) { alert('Por favor selecciona un tipo de entrega'); return; }
+    if (carrito.length === 0) { alert('Tu carrito está vacío'); return; }
+
+    const nombre = document.getElementById('inputNombre').value.trim();
+    const apellido = document.getElementById('inputApellido').value.trim();
+    const rut = document.getElementById('inputRut').value.trim();
+    const telefono = document.getElementById('inputTelefono').value.trim();
+    const correo = document.getElementById('inputCorreo').value.trim();
+
+    if (!nombre || !apellido || !rut || !telefono || !correo) {
+        alert('Por favor completa todos tus datos');
+        return;
+    }
+
+    let resumenHtml = '';
+    let total = 0;
+    let itemsJson = '';
+
+    carrito.forEach(item => {
+        total += item.precio * item.cantidad;
+        resumenHtml += `<p>${item.cantidad}x ${item.marca} ${item.nombre} ${item.ml}ml — $${(item.precio * item.cantidad).toLocaleString('es-CL')}</p>`;
+        itemsJson += `${item.marca} ${item.nombre} ${item.ml}ml;${item.cantidad};${item.precio};${item.id}|`;
+    });
+    itemsJson = itemsJson.slice(0, -1);
+
+    const direccion = tipoSeleccionado === 'envio' ? document.getElementById('inputDireccion').value : '';
+    const estacion = tipoSeleccionado === 'retiro' ? document.getElementById('inputEstacion').value : '';
+
+    const btn = e.target;
+    btn.innerText = 'Procesando...';
+    btn.disabled = true;
+
+    const formData = new FormData();
+    formData.append('nombre', nombre);
+    formData.append('apellido', apellido);
+    formData.append('rut', rut);
+    formData.append('telefono', telefono);
+    formData.append('correo', correo);
+    formData.append('tipo', tipoSeleccionado);
+    formData.append('direccion', direccion);
+    formData.append('estacion', estacion);
+    formData.append('resumenPedido', resumenHtml);
+    formData.append('total', '$' + total.toLocaleString('es-CL'));
+    formData.append('itemsJson', itemsJson);
+
+    const response = await fetch('/checkout/pago-ficticio', {
+        method: 'POST',
+        body: formData
+    });
+
+    const html = await response.text();
+    document.open();
+    document.write(html);
+    document.close();
 }
 
 function renderResumen() {

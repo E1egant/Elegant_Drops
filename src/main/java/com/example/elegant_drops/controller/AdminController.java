@@ -2,6 +2,10 @@ package com.example.elegant_drops.controller;
 
 import com.example.elegant_drops.model.Fragancia;
 import com.example.elegant_drops.model.Formato;
+import com.example.elegant_drops.model.Resena;
+import com.example.elegant_drops.model.Venta;
+import com.example.elegant_drops.repository.ResenaRepository;
+import com.example.elegant_drops.repository.VentaRepository;
 import com.example.elegant_drops.service.CloudinaryService;
 import com.example.elegant_drops.service.FraganciasService;
 import com.example.elegant_drops.repository.FraganciasRepository;
@@ -15,6 +19,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 
@@ -26,6 +31,8 @@ public class AdminController {
     @Autowired private FraganciasRepository fraganciaRepository;
     @Autowired private FormatoRepository formatoRepository;
     @Autowired private CloudinaryService cloudinaryService;
+    @Autowired private ResenaRepository resenaRepository;
+    @Autowired private VentaRepository ventaRepository;
     @Value("${admin.path}") private String adminPath;
     @Value("${admin.user}") private String adminUser;
     @Value("${admin.password}") private String adminPassword;
@@ -55,9 +62,36 @@ public class AdminController {
     @GetMapping("/dashboard")
     public String dashboard(Model model, HttpSession session) {
         if (session.getAttribute("adminLogged") == null) return sinSesion();
+
         List<Fragancia> fragancias = fraganciaService.listarTodas();
         fragancias.forEach(f -> f.getFormatos().sort(Comparator.comparingInt(Formato::getMl)));
+
+        List<Resena> resenas = resenaRepository.findAllByOrderByFechaDesc();
+        List<Venta> ventas = ventaRepository.findAllByOrderByFechaDesc();
+
+        LocalDateTime ahora = LocalDateTime.now();
+        LocalDateTime inicioSemana = ahora.minusDays(7);
+        LocalDateTime inicioMes = ahora.withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0);
+        LocalDateTime inicioAnio = ahora.withDayOfYear(1).withHour(0).withMinute(0).withSecond(0);
+
+        long gananciasSemana = ventas.stream()
+                .filter(v -> v.getFecha().isAfter(inicioSemana))
+                .mapToLong(Venta::getTotal).sum();
+
+        long gananciasMes = ventas.stream()
+                .filter(v -> v.getFecha().isAfter(inicioMes))
+                .mapToLong(Venta::getTotal).sum();
+
+        long gananciasAnio = ventas.stream()
+                .filter(v -> v.getFecha().isAfter(inicioAnio))
+                .mapToLong(Venta::getTotal).sum();
+
         model.addAttribute("fragancias", fragancias);
+        model.addAttribute("resenas", resenas);
+        model.addAttribute("ventas", ventas);
+        model.addAttribute("gananciasSemana", gananciasSemana);
+        model.addAttribute("gananciasMes", gananciasMes);
+        model.addAttribute("gananciasAnio", gananciasAnio);
         model.addAttribute("adminPath", adminPath);
         return "admin/dashboard";
     }
@@ -133,6 +167,13 @@ public class AdminController {
         if (session.getAttribute("adminLogged") == null) return sinSesion();
         fraganciaService.eliminar(id);
         return "redirect:/" + adminPath + "/dashboard";
+    }
+
+    @GetMapping("/resena/eliminar/{id}")
+    public String eliminarResena(@PathVariable Long id, HttpSession session) {
+        if (session.getAttribute("adminLogged") == null) return sinSesion();
+        resenaRepository.deleteById(id);
+        return "redirect:/" + adminPath + "/dashboard?tab=resenas";
     }
 
     @GetMapping("/logout")
