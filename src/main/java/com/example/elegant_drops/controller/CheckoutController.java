@@ -169,14 +169,17 @@ public class CheckoutController {
                 emailService.enviar(adminEmail, "Nuevo pedido — " + pedido.getNombre() + " " + pedido.getApellido(), html);
                 System.out.println("=== CORREOS ENVIADOS ===");
 
+            } else {
+                System.out.println("=== NO ENTRO AL IF — pedido: " + (pedido != null ? pedido.getEstado() : "NULL") + " ===");
+            }
+
+            // SIEMPRE cargar datos al modelo si el pedido existe
+            if (pedido != null) {
                 model.addAttribute("nombre", pedido.getNombre());
                 model.addAttribute("correo", pedido.getCorreo());
                 model.addAttribute("tipo", pedido.getTipoEntrega());
                 model.addAttribute("total", pedido.getTotal());
                 model.addAttribute("codigoTransaccion", payment_id != null ? payment_id : "N/A");
-
-            } else {
-                System.out.println("=== NO ENTRO AL IF — pedido: " + (pedido != null ? pedido.getEstado() : "NULL") + " ===");
             }
 
         } catch (Exception e) {
