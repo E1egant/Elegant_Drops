@@ -18,7 +18,6 @@ public class Formato {
 
     private Integer ml;
     private Integer precio;
-    private Integer stock;
 
     @ManyToOne
     @JoinColumn(name = "fragancia_id")
