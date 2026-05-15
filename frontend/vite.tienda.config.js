@@ -4,6 +4,7 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   root: 'tienda',
+  base: '/tienda/',
   build: {
     outDir: '../../src/main/resources/static/tienda',
     emptyOutDir: true,
