@@ -40,6 +40,7 @@
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12">
 
         <div>
+            <!-- TIPO DE ENTREGA -->
             <div class="mb-8 md:mb-10">
                 <h3 class="text-[10px] font-black text-[#c9967a] uppercase tracking-widest mb-4 md:mb-6">1. Tipo de entrega</h3>
                 <div class="grid grid-cols-2 gap-3 md:gap-4">
@@ -58,10 +59,9 @@
                 </div>
             </div>
 
+            <!-- DATOS -->
             <form id="checkoutForm" autocomplete="off" class="space-y-3 md:space-y-4">
-
                 <h3 class="text-[10px] font-black text-[#c9967a] uppercase tracking-widest mb-3 md:mb-4">2. Tus datos</h3>
-
                 <div class="grid grid-cols-2 gap-3 md:gap-4">
                     <input type="text" id="inputNombre" placeholder="Nombre" required autocomplete="off" class="input-premium">
                     <input type="text" id="inputApellido" placeholder="Apellido" required autocomplete="off" class="input-premium">
@@ -116,15 +116,21 @@
                     </select>
                 </div>
 
-                <div class="pt-4 md:pt-6">
+                <!-- BOTONES DE PAGO -->
+                <div class="pt-4 md:pt-6 space-y-3">
                     <button type="button" onclick="iniciarPago(event)" class="btn-luxury w-full py-4 md:py-5 text-xs uppercase tracking-widest">
-                        Pagar con MercadoPago
+                        <i class="fas fa-credit-card mr-2"></i> Pagar con tarjeta
                     </button>
-                    <p class="text-zinc-600 text-[10px] text-center mt-4 uppercase tracking-widest">Recibirás un comprobante por correo</p>
+                    <button type="button" onclick="finalizarWhatsApp()" class="w-full py-4 md:py-5 rounded-full text-xs uppercase tracking-widest font-black flex items-center justify-center gap-2 transition-all"
+                            style="background: #25D366; color: white; border: none; cursor: pointer; letter-spacing: 0.12em;">
+                        <i class="fab fa-whatsapp text-lg"></i> Coordinar por WhatsApp
+                    </button>
+                    <p class="text-zinc-600 text-[10px] text-center uppercase tracking-widest">Recibirás un comprobante por correo al pagar con tarjeta</p>
                 </div>
             </form>
         </div>
 
+        <!-- RESUMEN -->
         <div>
             <h3 class="text-[10px] font-black text-[#c9967a] uppercase tracking-widest mb-4 md:mb-6">Resumen del pedido</h3>
             <div class="card-perfume p-6 md:p-8">

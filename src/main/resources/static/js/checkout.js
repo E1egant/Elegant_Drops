@@ -22,11 +22,9 @@ function seleccionarTipo(tipo) {
     }
 }
 
-async function iniciarPago(e) {
-    e.preventDefault();
-
-    if (!tipoSeleccionado) { alert('Por favor selecciona un tipo de entrega'); return; }
-    if (carrito.length === 0) { alert('Tu carrito está vacío'); return; }
+function validarFormulario() {
+    if (!tipoSeleccionado) { alert('Por favor selecciona un tipo de entrega'); return false; }
+    if (carrito.length === 0) { alert('Tu carrito está vacío'); return false; }
 
     const nombre = document.getElementById('inputNombre').value.trim();
     const apellido = document.getElementById('inputApellido').value.trim();
@@ -36,18 +34,30 @@ async function iniciarPago(e) {
 
     if (!nombre || !apellido || !rut || !telefono || !correo) {
         alert('Por favor completa todos tus datos');
-        return;
+        return false;
     }
 
     if (tipoSeleccionado === 'envio') {
         const direccion = document.getElementById('inputDireccion').value.trim();
-        if (!direccion) { alert('Por favor ingresa tu dirección de envío'); return; }
+        if (!direccion) { alert('Por favor ingresa tu dirección de envío'); return false; }
     }
 
     if (tipoSeleccionado === 'retiro') {
         const estacion = document.getElementById('inputEstacion').value;
-        if (!estacion) { alert('Por favor selecciona una estación de retiro'); return; }
+        if (!estacion) { alert('Por favor selecciona una estación de retiro'); return false; }
     }
+
+    return true;
+}
+
+function obtenerDatos() {
+    const nombre = document.getElementById('inputNombre').value.trim();
+    const apellido = document.getElementById('inputApellido').value.trim();
+    const rut = document.getElementById('inputRut').value.trim();
+    const telefono = document.getElementById('inputTelefono').value.trim();
+    const correo = document.getElementById('inputCorreo').value.trim();
+    const direccion = tipoSeleccionado === 'envio' ? document.getElementById('inputDireccion').value.trim() : '';
+    const estacion = tipoSeleccionado === 'retiro' ? document.getElementById('inputEstacion').value : '';
 
     let resumenHtml = '';
     let total = 0;
@@ -55,13 +65,24 @@ async function iniciarPago(e) {
 
     carrito.forEach(item => {
         total += item.precio * item.cantidad;
-        resumenHtml += `<p>${item.cantidad}x ${item.marca} ${item.nombre} ${item.ml}ml — $${(item.precio * item.cantidad).toLocaleString('es-CL')}</p>`;
-        itemsJson += `${item.marca} ${item.nombre} ${item.ml}ml;${item.cantidad};${item.precio};${item.id}|`;
+        if (item.esPack) {
+            resumenHtml += `<p>${item.cantidad}x Pack ${item.nombre} — $${(item.precio * item.cantidad).toLocaleString('es-CL')}</p>`;
+            itemsJson += `Pack ${item.nombre};${item.cantidad};${item.precio};${item.id}|`;
+        } else {
+            resumenHtml += `<p>${item.cantidad}x ${item.marca} ${item.nombre} ${item.ml}ml — $${(item.precio * item.cantidad).toLocaleString('es-CL')}</p>`;
+            itemsJson += `${item.marca} ${item.nombre} ${item.ml}ml;${item.cantidad};${item.precio};${item.id}|`;
+        }
     });
     itemsJson = itemsJson.slice(0, -1);
 
-    const direccion = tipoSeleccionado === 'envio' ? document.getElementById('inputDireccion').value : '';
-    const estacion = tipoSeleccionado === 'retiro' ? document.getElementById('inputEstacion').value : '';
+    return { nombre, apellido, rut, telefono, correo, direccion, estacion, resumenHtml, total, itemsJson };
+}
+
+async function iniciarPago(e) {
+    e.preventDefault();
+    if (!validarFormulario()) return;
+
+    const { nombre, apellido, rut, telefono, correo, direccion, estacion, resumenHtml, total, itemsJson } = obtenerDatos();
 
     const btn = e.target;
     btn.innerText = 'Procesando...';
@@ -88,81 +109,51 @@ async function iniciarPago(e) {
 
         const preferenceId = await response.text();
 
-        if (preferenceId === 'error') {
-            throw new Error('Error al crear preferencia');
-        }
+        if (preferenceId === 'error') throw new Error('Error al crear preferencia');
 
         const mp = new MercadoPago(MP_PUBLIC_KEY, { locale: 'es-CL' });
-        mp.checkout({
-            preference: { id: preferenceId },
-            autoOpen: true
-        });
+        mp.checkout({ preference: { id: preferenceId }, autoOpen: true });
 
     } catch (error) {
         console.error(error);
         alert('Hubo un error al procesar el pago. Por favor intenta nuevamente.');
-        btn.innerText = 'Pagar con MercadoPago';
+        btn.innerText = 'Pagar con tarjeta';
         btn.disabled = false;
     }
 }
 
-async function pagoFicticio(e) {
-    e.preventDefault();
+function finalizarWhatsApp() {
+    if (!validarFormulario()) return;
 
-    if (!tipoSeleccionado) { alert('Por favor selecciona un tipo de entrega'); return; }
-    if (carrito.length === 0) { alert('Tu carrito está vacío'); return; }
+    const { nombre, apellido, rut, telefono, correo, direccion, estacion, total } = obtenerDatos();
 
-    const nombre = document.getElementById('inputNombre').value.trim();
-    const apellido = document.getElementById('inputApellido').value.trim();
-    const rut = document.getElementById('inputRut').value.trim();
-    const telefono = document.getElementById('inputTelefono').value.trim();
-    const correo = document.getElementById('inputCorreo').value.trim();
-
-    if (!nombre || !apellido || !rut || !telefono || !correo) {
-        alert('Por favor completa todos tus datos');
-        return;
-    }
-
-    let resumenHtml = '';
-    let total = 0;
-    let itemsJson = '';
+    let mensaje = `Hola, quiero hacer un pedido 🛍️\n\n`;
+    mensaje += `*Datos del cliente:*\n`;
+    mensaje += `Nombre: ${nombre} ${apellido}\n`;
+    mensaje += `RUT: ${rut}\n`;
+    mensaje += `Teléfono: ${telefono}\n`;
+    mensaje += `Correo: ${correo}\n\n`;
+    mensaje += `*Productos:*\n`;
 
     carrito.forEach(item => {
-        total += item.precio * item.cantidad;
-        resumenHtml += `<p>${item.cantidad}x ${item.marca} ${item.nombre} ${item.ml}ml — $${(item.precio * item.cantidad).toLocaleString('es-CL')}</p>`;
-        itemsJson += `${item.marca} ${item.nombre} ${item.ml}ml;${item.cantidad};${item.precio};${item.id}|`;
-    });
-    itemsJson = itemsJson.slice(0, -1);
-
-    const direccion = tipoSeleccionado === 'envio' ? document.getElementById('inputDireccion').value : '';
-    const estacion = tipoSeleccionado === 'retiro' ? document.getElementById('inputEstacion').value : '';
-
-    const btn = e.target;
-    btn.innerText = 'Procesando...';
-    btn.disabled = true;
-
-    const formData = new FormData();
-    formData.append('nombre', nombre);
-    formData.append('apellido', apellido);
-    formData.append('rut', rut);
-    formData.append('telefono', telefono);
-    formData.append('correo', correo);
-    formData.append('tipo', tipoSeleccionado);
-    formData.append('direccion', direccion);
-    formData.append('estacion', estacion);
-    formData.append('resumenPedido', resumenHtml);
-    formData.append('total', '$' + total.toLocaleString('es-CL'));
-    formData.append('itemsJson', itemsJson);
-
-    const response = await fetch('/checkout/pago-ficticio', {
-        method: 'POST',
-        body: formData
+        if (item.esPack) {
+            mensaje += `• ${item.cantidad}x Pack ${item.nombre} — $${(item.precio * item.cantidad).toLocaleString('es-CL')}\n`;
+        } else {
+            mensaje += `• ${item.cantidad}x ${item.marca} ${item.nombre} ${item.ml}ml — $${(item.precio * item.cantidad).toLocaleString('es-CL')}\n`;
+        }
     });
 
-    const html = await response.text();
-    document.open();
-    document.write(html);
-    document.close();
+    mensaje += `\n*Total: $${total.toLocaleString('es-CL')}*\n\n`;
+
+    if (tipoSeleccionado === 'envio') {
+        mensaje += `*Entrega:* Envío a domicilio\n`;
+        mensaje += `Dirección: ${direccion}\n`;
+    } else {
+        mensaje += `*Entrega:* Retiro en Metro ${estacion}\n`;
+    }
+
+    const url = `https://wa.me/56982055029?text=${encodeURIComponent(mensaje)}`;
+    window.open(url, '_blank');
 }
 
 function renderResumen() {
@@ -181,22 +172,30 @@ function renderResumen() {
         total += item.precio * item.cantidad;
         const div = document.createElement('div');
         div.className = 'flex justify-between items-start py-3 border-b border-white/[0.04]';
-        div.innerHTML = `
-            <div>
-                <p class="text-[9px] font-black text-[#c9967a] uppercase tracking-widest">${item.marca}</p>
-                <p class="text-white font-bold text-sm uppercase">${item.nombre}</p>
-                <p class="text-zinc-500 text-[10px]">${item.ml}ml × ${item.cantidad}</p>
-            </div>
-            <span class="text-white font-bold">$${(item.precio * item.cantidad).toLocaleString('es-CL')}</span>
-        `;
+
+        if (item.esPack) {
+            div.innerHTML = `
+                <div>
+                    <p class="text-[9px] font-black text-[#c9967a] uppercase tracking-widest">Pack</p>
+                    <p class="text-white font-bold text-sm uppercase">${item.nombre}</p>
+                    <p class="text-zinc-500 text-[10px]">× ${item.cantidad}</p>
+                </div>
+                <span class="text-white font-bold">$${(item.precio * item.cantidad).toLocaleString('es-CL')}</span>
+            `;
+        } else {
+            div.innerHTML = `
+                <div>
+                    <p class="text-[9px] font-black text-[#c9967a] uppercase tracking-widest">${item.marca}</p>
+                    <p class="text-white font-bold text-sm uppercase">${item.nombre}</p>
+                    <p class="text-zinc-500 text-[10px]">${item.ml}ml × ${item.cantidad}</p>
+                </div>
+                <span class="text-white font-bold">$${(item.precio * item.cantidad).toLocaleString('es-CL')}</span>
+            `;
+        }
         contenedor.appendChild(div);
     });
 
     totalEl.innerText = '$' + total.toLocaleString('es-CL');
 }
-
-const style = document.createElement('style');
-style.textContent = `.tipo-entrega-btn { cursor: pointer; transition: all 0.2s ease; } .tipo-entrega-btn:hover { border-color: rgba(201, 150, 122, 0.3) !important; }`;
-document.head.appendChild(style);
 
 renderResumen();
