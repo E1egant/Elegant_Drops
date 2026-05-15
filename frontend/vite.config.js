@@ -6,6 +6,13 @@ export default defineConfig({
     build: {
         outDir: '../src/main/resources/static/admin-react',
         emptyOutDir: true,
+        rollupOptions: {
+            output: {
+                entryFileNames: 'assets/index.js',
+                chunkFileNames: 'assets/index.js',
+                assetFileNames: 'assets/index.[ext]',
+            }
+        }
     },
     server: {
         proxy: {

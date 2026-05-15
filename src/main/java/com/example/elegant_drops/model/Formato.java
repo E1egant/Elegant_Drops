@@ -1,5 +1,6 @@
 package com.example.elegant_drops.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -20,6 +21,7 @@ public class Formato {
     private Integer precio;
     private Integer stock;
 
+    @JsonBackReference
     @ManyToOne
     @JoinColumn(name = "fragancia_id")
     private Fragancia fragancia;

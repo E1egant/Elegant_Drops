@@ -7,9 +7,9 @@ import {
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import axios from 'axios'
-import ModalFragancia from './ModalFragancia'
-import ModalFormato from './ModalFormato'
-import ModalPack from './ModalPack'
+import ModalFragancia from './ModalFragancia.jsx'
+import ModalFormato from './ModalFormato.jsx'
+import ModalPack from './ModalPack.jsx'
 
 function FilaFragancia({ fragancia, onEdit, onDelete, onToggle, onAgregarFormato, onEliminarFormato }) {
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: fragancia.id })

@@ -9,7 +9,6 @@ export default function ModalFragancia({ fragancia, categoria, adminPath, onClos
         genero: '',
         tipo: '',
         descripcion: '',
-        orden: '',
         categoria: categoria || 'DECANT',
     })
     const [imagenFile, setImagenFile] = useState(null)
@@ -25,7 +24,6 @@ export default function ModalFragancia({ fragancia, categoria, adminPath, onClos
                 genero: fragancia.genero || '',
                 tipo: fragancia.tipo || '',
                 descripcion: fragancia.descripcion || '',
-                orden: fragancia.orden || '',
                 categoria: fragancia.categoria || categoria || 'DECANT',
             })
             setPreview(fragancia.imagen || null)
@@ -115,19 +113,13 @@ export default function ModalFragancia({ fragancia, categoria, adminPath, onClos
                                   placeholder="Notas olfativas..." rows={3} style={{ resize: 'none' }} />
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                        <div>
-                            <label style={{ fontSize: 10, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em', display: 'block', marginBottom: 6 }}>Posición en tienda</label>
-                            <input className="input" name="orden" type="number" value={form.orden} onChange={handleChange} placeholder="ej: 1" min={1} />
-                        </div>
-                        <div>
-                            <label style={{ fontSize: 10, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em', display: 'block', marginBottom: 6 }}>Imagen</label>
-                            <div className="file-input-wrapper">
-                                <input type="file" accept="image/*" onChange={handleFile} />
-                                <div className="file-input-label">
-                                    <span>📷</span>
-                                    <span>{imagenFile ? imagenFile.name : fragancia?.imagen ? 'Cambiar imagen' : 'Seleccionar imagen'}</span>
-                                </div>
+                    <div>
+                        <label style={{ fontSize: 10, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em', display: 'block', marginBottom: 6 }}>Imagen</label>
+                        <div className="file-input-wrapper">
+                            <input type="file" accept="image/*" onChange={handleFile} />
+                            <div className="file-input-label">
+                                <span>📷</span>
+                                <span>{imagenFile ? imagenFile.name : fragancia?.imagen ? 'Cambiar imagen' : 'Seleccionar imagen'}</span>
                             </div>
                         </div>
                     </div>

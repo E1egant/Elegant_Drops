@@ -1,5 +1,6 @@
 package com.example.elegant_drops.model;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 import java.util.ArrayList;
@@ -34,6 +35,7 @@ public class Fragancia {
 
     private Boolean disponible;
 
+    @JsonManagedReference
     @OneToMany(mappedBy = "fragancia", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Formato> formatos = new ArrayList<>();
 }
