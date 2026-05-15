@@ -1,5 +1,7 @@
 package com.example.elegant_drops.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -15,10 +17,12 @@ public class PackItem {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @JsonBackReference("pack-items")
     @ManyToOne
     @JoinColumn(name = "pack_id")
     private Pack pack;
 
+    @JsonIgnoreProperties("formatos")
     @ManyToOne
     @JoinColumn(name = "fragancia_id")
     private Fragancia fragancia;

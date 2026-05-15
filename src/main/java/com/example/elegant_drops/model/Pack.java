@@ -1,5 +1,6 @@
 package com.example.elegant_drops.model;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 import java.util.ArrayList;
@@ -27,6 +28,7 @@ public class Pack {
     private Integer orden;
     private Boolean disponible;
 
+    @JsonManagedReference("pack-items")
     @OneToMany(mappedBy = "pack", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PackItem> items = new ArrayList<>();
 }

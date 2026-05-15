@@ -112,8 +112,9 @@ public class AdminController {
             fragancia.setGenero(genero);
             fragancia.setTipo(tipo);
             fragancia.setDescripcion(descripcion);
-            fragancia.setOrden(orden);
-
+            if (orden != null) {
+                fragancia.setOrden(orden);
+            }
             if (categoria != null && !categoria.isEmpty()) {
                 fragancia.setCategoria(CategoriaFragancia.valueOf(categoria));
             }

@@ -40,57 +40,151 @@
     </div>
 </div>
 
-<!-- CATÁLOGO -->
 <main class="container mx-auto px-4 md:px-12 py-8 md:py-16 pb-32">
-    <div th:if="${#lists.isEmpty(fragancias)}" class="text-center py-32">
-        <p class="text-zinc-600 text-sm uppercase tracking-widest">No hay fragancias disponibles en esta categoría</p>
-    </div>
-    <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-8">
-        <div th:each="f : ${fragancias}"
-             onclick="abrirModal(this)"
-             th:data-id="${f.id}"
-             th:data-nombre="${f.nombre}"
-             th:data-marca="${f.marca}"
-             th:data-concentracion="${f.concentracion}"
-             th:data-tipo="${f.tipo}"
-             th:data-genero="${f.genero}"
-             th:data-descripcion="${f.descripcion}"
-             th:data-imagen="${f.imagen}"
-             th:data-formatos="${#strings.toString(f.formatos.![ml + ':' + precio].toString())}"
-             th:data-formatoids="${#strings.toString(f.formatos.![id.toString()].toString())}"
-             class="tarjeta-perfume cursor-pointer">
 
-            <div class="imagen-perfume-container">
-                <img th:if="${f.imagen != null and !f.imagen.isEmpty()}"
-                     th:src="${f.imagen}"
-                     class="imagen-perfume" alt="Perfume">
-                <div th:if="${f.imagen == null or f.imagen.isEmpty()}"
-                     class="imagen-perfume-placeholder">
-                    <i class="fas fa-spray-can text-3xl text-zinc-700"></i>
-                </div>
-            </div>
-
-            <div class="p-3 md:p-6">
-                <span class="text-item-brand block mb-1" th:text="${f.marca}"></span>
-                <h3 class="text-white font-bold text-sm md:text-lg uppercase tracking-wide mb-1 leading-tight" th:text="${f.nombre}"></h3>
-                <div class="flex gap-1 md:gap-2 mb-3 md:mb-4 flex-wrap">
-                    <span class="tag-badge" th:text="${f.concentracion}"></span>
-                    <span class="tag-badge" th:if="${f.tipo != null and !f.tipo.isEmpty()}" th:text="${f.tipo}"></span>
-                </div>
-                <div class="flex justify-between items-center">
-                    <div>
-                        <span class="text-zinc-500 text-[8px] md:text-[9px] uppercase tracking-widest">Desde</span>
-                        <p class="text-white font-bold text-sm md:text-lg">
-                            $<span th:text="${f.formatos.isEmpty() ? '—' : #numbers.formatInteger(f.formatos[0].precio, 0, 'DEFAULT')}"></span>
-                        </p>
+    <!-- SECCIÓN DECANTS -->
+    <div th:if="${!#lists.isEmpty(decants)}" class="mb-16 md:mb-24">
+        <div class="mb-8 md:mb-12">
+            <h2 class="text-2xl md:text-3xl font-luxury text-white uppercase tracking-widest">Decants</h2>
+            <p class="text-zinc-500 text-xs mt-2 uppercase tracking-widest">Muestras en formato pequeño</p>
+            <div class="h-0.5 w-12 bg-[#c9967a] mt-4"></div>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-8">
+            <div th:each="f : ${decants}"
+                 onclick="abrirModal(this)"
+                 th:data-id="${f.id}"
+                 th:data-nombre="${f.nombre}"
+                 th:data-marca="${f.marca}"
+                 th:data-concentracion="${f.concentracion}"
+                 th:data-tipo="${f.tipo}"
+                 th:data-genero="${f.genero}"
+                 th:data-descripcion="${f.descripcion}"
+                 th:data-imagen="${f.imagen}"
+                 th:data-formatos="${#strings.toString(f.formatos.![ml + ':' + precio].toString())}"
+                 th:data-formatoids="${#strings.toString(f.formatos.![id.toString()].toString())}"
+                 class="tarjeta-perfume cursor-pointer">
+                <div class="imagen-perfume-container">
+                    <img th:if="${f.imagen != null and !f.imagen.isEmpty()}" th:src="${f.imagen}" class="imagen-perfume" alt="Perfume">
+                    <div th:if="${f.imagen == null or f.imagen.isEmpty()}" class="imagen-perfume-placeholder">
+                        <i class="fas fa-spray-can text-3xl text-zinc-700"></i>
                     </div>
-                    <div class="ver-mas-btn">
-                        <i class="fas fa-plus text-[10px]"></i>
+                </div>
+                <div class="p-3 md:p-6">
+                    <span class="text-item-brand block mb-1" th:text="${f.marca}"></span>
+                    <h3 class="text-white font-bold text-sm md:text-lg uppercase tracking-wide mb-1 leading-tight" th:text="${f.nombre}"></h3>
+                    <div class="flex gap-1 md:gap-2 mb-3 md:mb-4 flex-wrap">
+                        <span class="tag-badge" th:text="${f.concentracion}"></span>
+                        <span class="tag-badge" th:if="${f.tipo != null and !f.tipo.isEmpty()}" th:text="${f.tipo}"></span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <span class="text-zinc-500 text-[8px] md:text-[9px] uppercase tracking-widest">Desde</span>
+                            <p class="text-white font-bold text-sm md:text-lg">
+                                $<span th:text="${f.formatos.isEmpty() ? '—' : #numbers.formatInteger(f.formatos[0].precio, 0, 'DEFAULT')}"></span>
+                            </p>
+                        </div>
+                        <div class="ver-mas-btn"><i class="fas fa-plus text-[10px]"></i></div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- SECCIÓN COMPLETOS -->
+    <div th:if="${!#lists.isEmpty(completos)}" class="mb-16 md:mb-24">
+        <div class="mb-8 md:mb-12">
+            <h2 class="text-2xl md:text-3xl font-luxury text-white uppercase tracking-widest">Perfumes Completos</h2>
+            <p class="text-zinc-500 text-xs mt-2 uppercase tracking-widest">Frascos originales sellados</p>
+            <div class="h-0.5 w-12 bg-[#c9967a] mt-4"></div>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-8">
+            <div th:each="f : ${completos}"
+                 onclick="abrirModal(this)"
+                 th:data-id="${f.id}"
+                 th:data-nombre="${f.nombre}"
+                 th:data-marca="${f.marca}"
+                 th:data-concentracion="${f.concentracion}"
+                 th:data-tipo="${f.tipo}"
+                 th:data-genero="${f.genero}"
+                 th:data-descripcion="${f.descripcion}"
+                 th:data-imagen="${f.imagen}"
+                 th:data-formatos="${#strings.toString(f.formatos.![ml + ':' + precio].toString())}"
+                 th:data-formatoids="${#strings.toString(f.formatos.![id.toString()].toString())}"
+                 class="tarjeta-perfume cursor-pointer">
+                <div class="imagen-perfume-container">
+                    <img th:if="${f.imagen != null and !f.imagen.isEmpty()}" th:src="${f.imagen}" class="imagen-perfume" alt="Perfume">
+                    <div th:if="${f.imagen == null or f.imagen.isEmpty()}" class="imagen-perfume-placeholder">
+                        <i class="fas fa-spray-can text-3xl text-zinc-700"></i>
+                    </div>
+                </div>
+                <div class="p-3 md:p-6">
+                    <span class="text-item-brand block mb-1" th:text="${f.marca}"></span>
+                    <h3 class="text-white font-bold text-sm md:text-lg uppercase tracking-wide mb-1 leading-tight" th:text="${f.nombre}"></h3>
+                    <div class="flex gap-1 md:gap-2 mb-3 md:mb-4 flex-wrap">
+                        <span class="tag-badge" th:text="${f.concentracion}"></span>
+                        <span class="tag-badge" th:if="${f.tipo != null and !f.tipo.isEmpty()}" th:text="${f.tipo}"></span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <span class="text-zinc-500 text-[8px] md:text-[9px] uppercase tracking-widest">Precio</span>
+                            <p class="text-white font-bold text-sm md:text-lg">
+                                $<span th:text="${f.formatos.isEmpty() ? '—' : #numbers.formatInteger(f.formatos[0].precio, 0, 'DEFAULT')}"></span>
+                            </p>
+                        </div>
+                        <div class="ver-mas-btn"><i class="fas fa-plus text-[10px]"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECCIÓN PACKS -->
+    <div th:if="${!#lists.isEmpty(packs)}" class="mb-16 md:mb-24">
+        <div class="mb-8 md:mb-12">
+            <h2 class="text-2xl md:text-3xl font-luxury text-white uppercase tracking-widest">Packs</h2>
+            <p class="text-zinc-500 text-xs mt-2 uppercase tracking-widest">Combinaciones especiales</p>
+            <div class="h-0.5 w-12 bg-[#c9967a] mt-4"></div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
+            <div th:each="p : ${packs}"
+                 onclick="abrirModalPack(this)"
+                 th:data-id="${p.id}"
+                 th:data-nombre="${p.nombre}"
+                 th:data-descripcion="${p.descripcion}"
+                 th:data-precio="${p.precio}"
+                 th:data-imagen="${p.imagen}"
+                 class="tarjeta-perfume cursor-pointer">
+                <div class="imagen-perfume-container">
+                    <img th:if="${p.imagen != null and !p.imagen.isEmpty()}" th:src="${p.imagen}" class="imagen-perfume" alt="Pack">
+                    <div th:if="${p.imagen == null or p.imagen.isEmpty()}" class="imagen-perfume-placeholder">
+                        <i class="fas fa-gift text-3xl text-zinc-700"></i>
+                    </div>
+                </div>
+                <div class="p-3 md:p-6">
+                    <span class="text-item-brand block mb-1">Pack</span>
+                    <h3 class="text-white font-bold text-sm md:text-lg uppercase tracking-wide mb-3 leading-tight" th:text="${p.nombre}"></h3>
+                    <div th:if="${p.descripcion != null and !p.descripcion.isEmpty()}">
+                        <p class="text-zinc-500 text-xs italic mb-3" th:text="${p.descripcion}"></p>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <span class="text-zinc-500 text-[8px] md:text-[9px] uppercase tracking-widest">Precio pack</span>
+                            <p class="text-white font-bold text-sm md:text-lg">
+                                $<span th:text="${#numbers.formatInteger(p.precio, 0, 'DEFAULT')}"></span>
+                            </p>
+                        </div>
+                        <div class="ver-mas-btn"><i class="fas fa-plus text-[10px]"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MENSAJE SI NO HAY NADA -->
+    <div th:if="${#lists.isEmpty(decants) and #lists.isEmpty(completos) and #lists.isEmpty(packs)}" class="text-center py-32">
+        <p class="text-zinc-600 text-sm uppercase tracking-widest">No hay fragancias disponibles</p>
+    </div>
+
 </main>
 
 <!-- SECCIÓN RESEÑAS -->
@@ -99,13 +193,11 @@
         <h2 class="text-2xl md:text-3xl font-luxury text-white uppercase tracking-widest mb-4">Lo que dicen nuestros clientes</h2>
         <div class="h-0.5 w-12 bg-[#c9967a] mx-auto"></div>
     </div>
-
     <div th:if="${resenaOk}" class="mb-8 p-4 rounded-2xl border border-[#c9967a]/30 bg-[#c9967a]/[0.05] text-center">
         <p class="text-[#c9967a] text-xs uppercase tracking-widest font-bold">
             <i class="fas fa-check mr-2"></i> ¡Gracias por tu reseña!
         </p>
     </div>
-
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
         <div th:each="r : ${resenas}" class="card-perfume p-5 md:p-6">
             <div class="flex gap-1 mb-3">
@@ -126,14 +218,12 @@
 <div id="modalDetalle" class="fixed inset-0 bg-black/90 hidden z-[100] flex items-center justify-center p-3 md:p-4 backdrop-blur-md overflow-y-auto">
     <div class="bg-[#1a1714] border border-white/10 rounded-[1.5rem] md:rounded-[2rem] w-full max-w-2xl overflow-hidden my-auto">
         <div class="flex flex-col md:flex-row">
-            <!-- IMAGEN -->
             <div class="md:w-2/5 bg-[#111009] flex items-center justify-center p-6 md:p-10 min-h-48 md:min-h-64">
                 <img id="modalImagen" src="#" alt="Perfume" class="max-h-48 md:max-h-72 w-auto object-contain hidden">
                 <div id="modalImagenPlaceholder" class="flex items-center justify-center">
                     <i class="fas fa-spray-can text-5xl text-zinc-700"></i>
                 </div>
             </div>
-            <!-- DETALLE -->
             <div class="md:w-3/5 p-6 md:p-10 flex flex-col justify-between">
                 <div>
                     <button onclick="cerrarModal()" class="text-zinc-600 hover:text-white transition text-xs uppercase tracking-widest mb-4 md:mb-6 flex items-center gap-2">
@@ -147,12 +237,10 @@
                         <span id="modalGenero" class="tag-badge"></span>
                     </div>
                     <p id="modalDescripcion" class="text-zinc-400 text-xs leading-relaxed italic mb-4 md:mb-6"></p>
-
                     <div class="mb-4 md:mb-6">
                         <p class="text-[9px] text-zinc-500 uppercase tracking-widest mb-3">Selecciona el tamaño</p>
                         <div id="modalFormatos" class="flex flex-wrap gap-2"></div>
                     </div>
-
                     <div class="flex items-center justify-between mb-4 md:mb-6">
                         <div>
                             <span class="text-zinc-500 text-[9px] uppercase tracking-widest">Precio</span>
@@ -160,11 +248,37 @@
                         </div>
                     </div>
                 </div>
-
                 <button onclick="agregarAlCarrito()" class="btn-luxury w-full py-4 text-xs uppercase tracking-widest">
                     <i class="fas fa-shopping-bag mr-2"></i> Agregar al carrito
                 </button>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL PACK -->
+<div id="modalPack" class="fixed inset-0 bg-black/90 hidden z-[100] flex items-center justify-center p-3 md:p-4 backdrop-blur-md overflow-y-auto">
+    <div class="bg-[#1a1714] border border-white/10 rounded-[1.5rem] md:rounded-[2rem] w-full max-w-lg overflow-hidden my-auto">
+        <div class="p-6 md:p-10">
+            <button onclick="cerrarModalPack()" class="text-zinc-600 hover:text-white transition text-xs uppercase tracking-widest mb-6 flex items-center gap-2">
+                <i class="fas fa-times"></i> Cerrar
+            </button>
+            <div id="packImagenContainer" class="w-full h-48 bg-[#111009] rounded-2xl mb-6 flex items-center justify-center overflow-hidden">
+                <img id="packImagen" src="#" alt="Pack" class="w-full h-full object-cover hidden">
+                <i id="packImagenPlaceholder" class="fas fa-gift text-5xl text-zinc-700"></i>
+            </div>
+            <span class="text-item-brand block mb-1">Pack</span>
+            <h2 id="packNombre" class="text-white font-luxury text-xl md:text-2xl uppercase tracking-wide mb-2"></h2>
+            <p id="packDescripcion" class="text-zinc-400 text-xs leading-relaxed italic mb-6"></p>
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <span class="text-zinc-500 text-[9px] uppercase tracking-widest">Precio pack</span>
+                    <p id="packPrecio" class="text-white font-bold text-2xl"></p>
+                </div>
+            </div>
+            <button onclick="agregarPackAlCarrito()" class="btn-luxury w-full py-4 text-xs uppercase tracking-widest">
+                <i class="fas fa-shopping-bag mr-2"></i> Agregar al carrito
+            </button>
         </div>
     </div>
 </div>
@@ -177,9 +291,7 @@
             <i class="fas fa-times text-lg"></i>
         </button>
     </div>
-    <div id="carritoItems" class="flex-1 overflow-y-auto p-6 md:p-8 space-y-4">
-        <p id="carritoVacio" class="text-zinc-600 text-xs uppercase tracking-widest text-center py-8">Tu carrito está vacío</p>
-    </div>
+    <div id="carritoItems" class="flex-1 overflow-y-auto p-6 md:p-8 space-y-4"></div>
     <div class="p-6 md:p-8 border-t border-white/[0.05]">
         <div class="flex justify-between items-center mb-4 md:mb-6">
             <span class="text-zinc-400 text-xs uppercase tracking-widest">Total</span>
@@ -203,9 +315,7 @@
             <p class="text-[9px] font-black text-[#c9967a] uppercase tracking-widest">¿En qué podemos ayudarte?</p>
         </div>
         <div class="divide-y divide-white/[0.04]">
-            <a href="https://wa.me/56982055029?text=Hola%2C%20quiero%20consultar%20sobre%20precios%20mayoristas%20para%20m%C3%A1s%20cantidad%20de%20ml%20%F0%9F%8C%BF"
-               target="_blank"
-               class="flex items-center gap-3 px-5 py-4 hover:bg-white/[0.03] transition">
+            <a href="https://wa.me/56982055029?text=Hola%2C%20quiero%20consultar%20sobre%20precios%20mayoristas" target="_blank" class="flex items-center gap-3 px-5 py-4 hover:bg-white/[0.03] transition">
                 <div class="w-8 h-8 rounded-full bg-[#25D366]/10 flex items-center justify-center flex-shrink-0">
                     <i class="fab fa-whatsapp text-[#25D366] text-sm"></i>
                 </div>
@@ -214,9 +324,7 @@
                     <p class="text-zinc-500 text-[10px] mt-0.5">Precio mayorista por WhatsApp</p>
                 </div>
             </a>
-            <a href="https://wa.me/56982055029?text=Hola%2C%20estoy%20buscando%20un%20perfume%20que%20no%20est%C3%A1%20en%20la%20p%C3%A1gina%2C%20%C2%BFpueden%20conseguirlo%3F%20%F0%9F%8C%BF"
-               target="_blank"
-               class="flex items-center gap-3 px-5 py-4 hover:bg-white/[0.03] transition">
+            <a href="https://wa.me/56982055029?text=Hola%2C%20estoy%20buscando%20un%20perfume%20que%20no%20está%20en%20la%20página" target="_blank" class="flex items-center gap-3 px-5 py-4 hover:bg-white/[0.03] transition">
                 <div class="w-8 h-8 rounded-full bg-[#25D366]/10 flex items-center justify-center flex-shrink-0">
                     <i class="fab fa-whatsapp text-[#25D366] text-sm"></i>
                 </div>
@@ -225,9 +333,7 @@
                     <p class="text-zinc-500 text-[10px] mt-0.5">Si no está en la lista, lo conseguimos</p>
                 </div>
             </a>
-            <a href="https://wa.me/56982055029?text=Hola%2C%20tengo%20una%20duda%20sobre%20una%20fragancia%20%F0%9F%8C%BF"
-               target="_blank"
-               class="flex items-center gap-3 px-5 py-4 hover:bg-white/[0.03] transition">
+            <a href="https://wa.me/56982055029?text=Hola%2C%20tengo%20una%20duda%20sobre%20una%20fragancia" target="_blank" class="flex items-center gap-3 px-5 py-4 hover:bg-white/[0.03] transition">
                 <div class="w-8 h-8 rounded-full bg-[#25D366]/10 flex items-center justify-center flex-shrink-0">
                     <i class="fab fa-whatsapp text-[#25D366] text-sm"></i>
                 </div>
@@ -238,9 +344,7 @@
             </a>
         </div>
     </div>
-
-    <button onclick="toggleWaPanel()"
-            class="flex items-center gap-3 bg-[#25D366] hover:bg-[#20b858] text-white px-4 md:px-5 py-3 rounded-full shadow-lg transition-all duration-300 hover:scale-105">
+    <button onclick="toggleWaPanel()" class="flex items-center gap-3 bg-[#25D366] hover:bg-[#20b858] text-white px-4 md:px-5 py-3 rounded-full shadow-lg transition-all duration-300 hover:scale-105">
         <i class="fab fa-whatsapp text-2xl"></i>
         <span class="text-xs font-bold uppercase tracking-widest">Consultas</span>
     </button>
@@ -248,10 +352,8 @@
 
 <script>
     function toggleWaPanel() {
-        const panel = document.getElementById('waPanelMenu');
-        panel.classList.toggle('hidden');
+        document.getElementById('waPanelMenu').classList.toggle('hidden');
     }
-
     document.addEventListener('click', function(e) {
         const panel = document.getElementById('waPanelMenu');
         const boton = panel.nextElementSibling;
@@ -259,6 +361,68 @@
             panel.classList.add('hidden');
         }
     });
+
+    // MODAL PACK
+    let packSeleccionado = null;
+    function abrirModalPack(card) {
+        const nombre = card.getAttribute('data-nombre');
+        const descripcion = card.getAttribute('data-descripcion');
+        const precio = card.getAttribute('data-precio');
+        const imagen = card.getAttribute('data-imagen');
+        const id = card.getAttribute('data-id');
+
+        packSeleccionado = { id, nombre, precio: Number(precio) };
+
+        document.getElementById('packNombre').innerText = nombre;
+        document.getElementById('packDescripcion').innerText = descripcion || '';
+        document.getElementById('packPrecio').innerText = '$' + Number(precio).toLocaleString('es-CL');
+
+        const imgEl = document.getElementById('packImagen');
+        const placeholder = document.getElementById('packImagenPlaceholder');
+        if (imagen && imagen !== 'null' && imagen !== '') {
+            imgEl.src = imagen;
+            imgEl.classList.remove('hidden');
+            placeholder.classList.add('hidden');
+        } else {
+            imgEl.classList.add('hidden');
+            placeholder.classList.remove('hidden');
+        }
+
+        document.getElementById('modalPack').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+        const waBtn = document.getElementById('whatsappBtn');
+        if (waBtn) waBtn.classList.add('hidden');
+    }
+
+    function cerrarModalPack() {
+        document.getElementById('modalPack').classList.add('hidden');
+        document.body.style.overflow = '';
+        packSeleccionado = null;
+        const waBtn = document.getElementById('whatsappBtn');
+        if (waBtn) waBtn.classList.remove('hidden');
+    }
+
+    function agregarPackAlCarrito() {
+        if (!packSeleccionado) return;
+        const existente = carrito.find(i => i.id === 'pack-' + packSeleccionado.id);
+        if (existente) {
+            existente.cantidad++;
+        } else {
+            carrito.push({
+                id: 'pack-' + packSeleccionado.id,
+                nombre: packSeleccionado.nombre,
+                marca: 'Pack',
+                ml: null,
+                precio: packSeleccionado.precio,
+                cantidad: 1,
+                esPack: true
+            });
+        }
+        sessionStorage.setItem('carrito', JSON.stringify(carrito));
+        renderCarrito();
+        cerrarModalPack();
+        toggleCarrito();
+    }
 </script>
 
 <script th:src="@{/js/index.js}"></script>
