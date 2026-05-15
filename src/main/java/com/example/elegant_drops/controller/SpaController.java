@@ -6,7 +6,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 @Controller
 public class SpaController {
 
-    // Rutas que maneja React
     @GetMapping(value = {
             "/",
             "/decants",
@@ -18,6 +17,6 @@ public class SpaController {
             "/pendiente"
     })
     public String spa() {
-        return "forward:/index.html";
+        return "forward:/tienda/index.html";
     }
 }
