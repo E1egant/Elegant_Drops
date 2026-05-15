@@ -1,18 +1,13 @@
 package com.example.elegant_drops.controller;
 
-import com.example.elegant_drops.model.Fragancia;
-import com.example.elegant_drops.model.Formato;
-import com.example.elegant_drops.model.Resena;
-import com.example.elegant_drops.model.Venta;
-import com.example.elegant_drops.repository.ResenaRepository;
-import com.example.elegant_drops.repository.VentaRepository;
+import com.example.elegant_drops.model.*;
+import com.example.elegant_drops.repository.*;
 import com.example.elegant_drops.service.CloudinaryService;
 import com.example.elegant_drops.service.FraganciasService;
-import com.example.elegant_drops.repository.FraganciasRepository;
-import com.example.elegant_drops.repository.FormatoRepository;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -20,8 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 
 @Controller
 @RequestMapping("/${admin.path}")
@@ -40,10 +34,9 @@ public class AdminController {
 
     public AdminController(BCryptPasswordEncoder encoder) { this.encoder = encoder; }
 
-    private String sinSesion() {
-        return "redirect:/" + adminPath + "/login";
-    }
+    private String sinSesion() { return "redirect:/" + adminPath + "/login"; }
 
+    // ── LOGIN ──────────────────────────────────────────────
     @GetMapping("/login")
     public String showLogin(Model model) {
         model.addAttribute("adminPath", adminPath);
@@ -59,126 +52,202 @@ public class AdminController {
         return "redirect:/" + adminPath + "/login?error=true";
     }
 
-    @GetMapping("/dashboard")
-    public String dashboard(Model model, HttpSession session) {
-        if (session.getAttribute("adminLogged") == null) return sinSesion();
-
-        List<Fragancia> fragancias = fraganciaService.listarTodas();
-        fragancias.forEach(f -> f.getFormatos().sort(Comparator.comparingInt(Formato::getMl)));
-
-        List<Resena> resenas = resenaRepository.findAllByOrderByFechaDesc();
-        List<Venta> ventas = ventaRepository.findAllByOrderByFechaDesc();
-
-        LocalDateTime ahora = LocalDateTime.now();
-        LocalDateTime inicioSemana = ahora.minusDays(7);
-        LocalDateTime inicioMes = ahora.withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0);
-        LocalDateTime inicioAnio = ahora.withDayOfYear(1).withHour(0).withMinute(0).withSecond(0);
-
-        long gananciasSemana = ventas.stream()
-                .filter(v -> v.getFecha().isAfter(inicioSemana))
-                .mapToLong(Venta::getTotal).sum();
-
-        long gananciasMes = ventas.stream()
-                .filter(v -> v.getFecha().isAfter(inicioMes))
-                .mapToLong(Venta::getTotal).sum();
-
-        long gananciasAnio = ventas.stream()
-                .filter(v -> v.getFecha().isAfter(inicioAnio))
-                .mapToLong(Venta::getTotal).sum();
-
-        model.addAttribute("fragancias", fragancias);
-        model.addAttribute("resenas", resenas);
-        model.addAttribute("ventas", ventas);
-        model.addAttribute("gananciasSemana", gananciasSemana);
-        model.addAttribute("gananciasMes", gananciasMes);
-        model.addAttribute("gananciasAnio", gananciasAnio);
-        model.addAttribute("adminPath", adminPath);
-        return "admin/dashboard";
-    }
-
-    @PostMapping("/guardar")
-    public String guardar(@ModelAttribute Fragancia fragancia,
-                          @RequestParam("imagenFile") MultipartFile imagenFile,
-                          HttpSession session) {
-        if (session.getAttribute("adminLogged") == null) return sinSesion();
-
-        try {
-            if (fragancia.getId() != null) {
-                Fragancia existente = fraganciaService.buscarPorId(fragancia.getId());
-                fragancia.setDisponible(existente.getDisponible());
-                fragancia.setFormatos(existente.getFormatos());
-                if (imagenFile.isEmpty()) {
-                    fragancia.setImagen(existente.getImagen());
-                } else {
-                    if (existente.getImagen() != null && existente.getImagen().startsWith("http")) {
-                        cloudinaryService.eliminarImagen(existente.getImagen());
-                    }
-                    String url = cloudinaryService.subirImagen(imagenFile);
-                    fragancia.setImagen(url);
-                }
-            } else {
-                fragancia.setDisponible(true);
-                if (!imagenFile.isEmpty()) {
-                    String url = cloudinaryService.subirImagen(imagenFile);
-                    fragancia.setImagen(url);
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        fraganciaService.guardar(fragancia);
-        return "redirect:/" + adminPath + "/dashboard";
-    }
-
-    @PostMapping("/formato/guardar")
-    public String guardarFormato(@RequestParam Long fraganciaId, @ModelAttribute Formato formato, HttpSession session) {
-        if (session.getAttribute("adminLogged") == null) return sinSesion();
-        Fragancia f = fraganciaService.buscarPorId(fraganciaId);
-        if (f != null) {
-            formato.setStock(1);
-            formato.setFragancia(f);
-            f.getFormatos().add(formato);
-            fraganciaService.guardar(f);
-        }
-        return "redirect:/" + adminPath + "/dashboard";
-    }
-
-    @GetMapping("/formato/eliminar/{id}")
-    public String eliminarFormato(@PathVariable Long id, HttpSession session) {
-        if (session.getAttribute("adminLogged") == null) return sinSesion();
-        formatoRepository.deleteById(id);
-        return "redirect:/" + adminPath + "/dashboard";
-    }
-
-    @GetMapping("/toggle/{id}")
-    public String toggleStock(@PathVariable Long id, HttpSession session) {
-        if (session.getAttribute("adminLogged") == null) return sinSesion();
-        Fragancia f = fraganciaRepository.findById(id).orElse(null);
-        if (f != null) {
-            f.setDisponible(f.getDisponible() == null || !f.getDisponible());
-            fraganciaRepository.save(f);
-        }
-        return "redirect:/" + adminPath + "/dashboard";
-    }
-
-    @GetMapping("/eliminar/{id}")
-    public String eliminar(@PathVariable Long id, HttpSession session) {
-        if (session.getAttribute("adminLogged") == null) return sinSesion();
-        fraganciaService.eliminar(id);
-        return "redirect:/" + adminPath + "/dashboard";
-    }
-
-    @GetMapping("/resena/eliminar/{id}")
-    public String eliminarResena(@PathVariable Long id, HttpSession session) {
-        if (session.getAttribute("adminLogged") == null) return sinSesion();
-        resenaRepository.deleteById(id);
-        return "redirect:/" + adminPath + "/dashboard?tab=resenas";
-    }
-
     @GetMapping("/logout")
     public String logout(HttpSession session) {
         session.invalidate();
         return "redirect:/";
+    }
+
+    // ── DASHBOARD (solo sirve el HTML, React toma el control) ──
+    @GetMapping("/dashboard")
+    public String dashboard(HttpSession session, Model model) {
+        if (session.getAttribute("adminLogged") == null) return sinSesion();
+        model.addAttribute("adminPath", adminPath);
+        return "admin/dashboard";
+    }
+
+    // ── API: FRAGANCIAS ────────────────────────────────────
+    @GetMapping("/api/fragancias")
+    @ResponseBody
+    public ResponseEntity<?> listarFragancias(HttpSession session) {
+        if (session.getAttribute("adminLogged") == null)
+            return ResponseEntity.status(401).build();
+
+        List<Fragancia> fragancias = fraganciaService.listarTodas();
+        fragancias.forEach(f -> f.getFormatos().sort(Comparator.comparingInt(Formato::getMl)));
+        return ResponseEntity.ok(fragancias);
+    }
+
+    @PostMapping("/api/fragancias/guardar")
+    @ResponseBody
+    public ResponseEntity<?> guardarFragancia(
+            @RequestParam(required = false) Long id,
+            @RequestParam String nombre,
+            @RequestParam String marca,
+            @RequestParam(required = false) String concentracion,
+            @RequestParam(required = false) String genero,
+            @RequestParam(required = false) String tipo,
+            @RequestParam(required = false) String descripcion,
+            @RequestParam(required = false) Integer orden,
+            @RequestParam(required = false) String categoria,
+            @RequestParam(value = "imagenFile", required = false) MultipartFile imagenFile,
+            HttpSession session) {
+
+        if (session.getAttribute("adminLogged") == null)
+            return ResponseEntity.status(401).build();
+
+        try {
+            Fragancia fragancia;
+            if (id != null) {
+                fragancia = fraganciaService.buscarPorId(id);
+                if (fragancia == null) return ResponseEntity.notFound().build();
+            } else {
+                fragancia = new Fragancia();
+                fragancia.setDisponible(true);
+            }
+
+            fragancia.setNombre(nombre);
+            fragancia.setMarca(marca);
+            fragancia.setConcentracion(concentracion);
+            fragancia.setGenero(genero);
+            fragancia.setTipo(tipo);
+            fragancia.setDescripcion(descripcion);
+            fragancia.setOrden(orden);
+
+            if (categoria != null && !categoria.isEmpty()) {
+                fragancia.setCategoria(CategoriaFragancia.valueOf(categoria));
+            }
+
+            if (imagenFile != null && !imagenFile.isEmpty()) {
+                if (fragancia.getImagen() != null && fragancia.getImagen().startsWith("http")) {
+                    cloudinaryService.eliminarImagen(fragancia.getImagen());
+                }
+                fragancia.setImagen(cloudinaryService.subirImagen(imagenFile));
+            }
+
+            fraganciaService.guardar(fragancia);
+            return ResponseEntity.ok(fragancia);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("Error al guardar");
+        }
+    }
+
+    @DeleteMapping("/api/fragancias/{id}")
+    @ResponseBody
+    public ResponseEntity<?> eliminarFragancia(@PathVariable Long id, HttpSession session) {
+        if (session.getAttribute("adminLogged") == null)
+            return ResponseEntity.status(401).build();
+        fraganciaService.eliminar(id);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/api/fragancias/{id}/toggle")
+    @ResponseBody
+    public ResponseEntity<?> toggleDisponible(@PathVariable Long id, HttpSession session) {
+        if (session.getAttribute("adminLogged") == null)
+            return ResponseEntity.status(401).build();
+        Fragancia f = fraganciaRepository.findById(id).orElse(null);
+        if (f == null) return ResponseEntity.notFound().build();
+        f.setDisponible(f.getDisponible() == null || !f.getDisponible());
+        fraganciaRepository.save(f);
+        return ResponseEntity.ok(f);
+    }
+
+    @PostMapping("/api/fragancias/reordenar")
+    @ResponseBody
+    public ResponseEntity<?> reordenar(@RequestBody List<Map<String, Object>> orden, HttpSession session) {
+        if (session.getAttribute("adminLogged") == null)
+            return ResponseEntity.status(401).build();
+        for (Map<String, Object> item : orden) {
+            Long id = Long.valueOf(item.get("id").toString());
+            Integer nuevoOrden = Integer.valueOf(item.get("orden").toString());
+            Fragancia f = fraganciaRepository.findById(id).orElse(null);
+            if (f != null) {
+                f.setOrden(nuevoOrden);
+                fraganciaRepository.save(f);
+            }
+        }
+        return ResponseEntity.ok().build();
+    }
+
+    // ── API: FORMATOS ──────────────────────────────────────
+    @PostMapping("/api/formatos/guardar")
+    @ResponseBody
+    public ResponseEntity<?> guardarFormato(
+            @RequestParam Long fraganciaId,
+            @RequestParam Integer ml,
+            @RequestParam Integer precio,
+            HttpSession session) {
+
+        if (session.getAttribute("adminLogged") == null)
+            return ResponseEntity.status(401).build();
+
+        Fragancia f = fraganciaService.buscarPorId(fraganciaId);
+        if (f == null) return ResponseEntity.notFound().build();
+
+        Formato formato = new Formato();
+        formato.setMl(ml);
+        formato.setPrecio(precio);
+        formato.setStock(1);
+        formato.setFragancia(f);
+        f.getFormatos().add(formato);
+        fraganciaService.guardar(f);
+        return ResponseEntity.ok(f);
+    }
+
+    @DeleteMapping("/api/formatos/{id}")
+    @ResponseBody
+    public ResponseEntity<?> eliminarFormato(@PathVariable Long id, HttpSession session) {
+        if (session.getAttribute("adminLogged") == null)
+            return ResponseEntity.status(401).build();
+        formatoRepository.deleteById(id);
+        return ResponseEntity.ok().build();
+    }
+
+    // ── API: VENTAS Y RESEÑAS ──────────────────────────────
+    @GetMapping("/api/ventas")
+    @ResponseBody
+    public ResponseEntity<?> listarVentas(HttpSession session) {
+        if (session.getAttribute("adminLogged") == null)
+            return ResponseEntity.status(401).build();
+
+        List<Venta> ventas = ventaRepository.findAllByOrderByFechaDesc();
+        LocalDateTime ahora = LocalDateTime.now();
+
+        long gananciasSemana = ventas.stream()
+                .filter(v -> v.getFecha().isAfter(ahora.minusDays(7)))
+                .mapToLong(Venta::getTotal).sum();
+        long gananciasMes = ventas.stream()
+                .filter(v -> v.getFecha().isAfter(ahora.withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0)))
+                .mapToLong(Venta::getTotal).sum();
+        long gananciasAnio = ventas.stream()
+                .filter(v -> v.getFecha().isAfter(ahora.withDayOfYear(1).withHour(0).withMinute(0).withSecond(0)))
+                .mapToLong(Venta::getTotal).sum();
+
+        Map<String, Object> resultado = new HashMap<>();
+        resultado.put("ventas", ventas);
+        resultado.put("gananciasSemana", gananciasSemana);
+        resultado.put("gananciasMes", gananciasMes);
+        resultado.put("gananciasAnio", gananciasAnio);
+        return ResponseEntity.ok(resultado);
+    }
+
+    @GetMapping("/api/resenas")
+    @ResponseBody
+    public ResponseEntity<?> listarResenas(HttpSession session) {
+        if (session.getAttribute("adminLogged") == null)
+            return ResponseEntity.status(401).build();
+        return ResponseEntity.ok(resenaRepository.findAllByOrderByFechaDesc());
+    }
+
+    @DeleteMapping("/api/resenas/{id}")
+    @ResponseBody
+    public ResponseEntity<?> eliminarResena(@PathVariable Long id, HttpSession session) {
+        if (session.getAttribute("adminLogged") == null)
+            return ResponseEntity.status(401).build();
+        resenaRepository.deleteById(id);
+        return ResponseEntity.ok().build();
     }
 }

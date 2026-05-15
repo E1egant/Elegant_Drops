@@ -4,23 +4,25 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "formatos")
+@Table(name = "pack_items")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-public class Formato {
+public class PackItem {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Integer ml;
-    private Integer precio;
-    private Integer stock;
+    @ManyToOne
+    @JoinColumn(name = "pack_id")
+    private Pack pack;
 
     @ManyToOne
     @JoinColumn(name = "fragancia_id")
     private Fragancia fragancia;
+
+    private Integer ml;
+    private Integer cantidad;
 }

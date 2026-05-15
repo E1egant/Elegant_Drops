@@ -25,6 +25,10 @@ public class Fragancia {
     private String imagen;
     private Integer orden;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "categoria", columnDefinition = "VARCHAR(20)")
+    private CategoriaFragancia categoria;
+
     @Column(columnDefinition = "TEXT")
     private String descripcion;
 
