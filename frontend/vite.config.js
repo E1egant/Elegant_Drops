@@ -4,7 +4,7 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   build: {
-    outDir: '../src/main/resources/static/tienda',
+    outDir: '../src/main/resources/static/admin-react',
     emptyOutDir: true,
     rollupOptions: {
       output: {
@@ -15,10 +15,9 @@ export default defineConfig({
     }
   },
   server: {
+    port: 5173,
     proxy: {
-      '/api': 'http://localhost:8080',
       '/elegant-2026': 'http://localhost:8080',
-      '/checkout': 'http://localhost:8080',
     }
   }
 })
