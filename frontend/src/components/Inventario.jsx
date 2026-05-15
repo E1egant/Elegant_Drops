@@ -170,8 +170,8 @@ export default function Inventario({ adminPath }) {
         cargarPacks()
     }, [])
 
-    const decants = fragancias.filter(f => f.categoria === 'DECANT' || f.categoria === null)
-    const completos = fragancias.filter(f => f.categoria === 'COMPLETO')
+    const decants = Array.isArray(fragancias) ? fragancias.filter(f => f.categoria === 'DECANT' || f.categoria === null) : []
+    const completos = Array.isArray(fragancias) ? fragancias.filter(f => f.categoria === 'COMPLETO') : []
 
     const handleDelete = async (id) => {
         await axios.delete(`/${adminPath}/api/fragancias/${id}`)
