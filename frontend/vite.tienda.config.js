@@ -3,8 +3,9 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react()],
+  root: 'tienda',
   build: {
-    outDir: '../src/main/resources/static/tienda',
+    outDir: '../../src/main/resources/static/tienda',
     emptyOutDir: true,
     rollupOptions: {
       output: {
@@ -15,6 +16,7 @@ export default defineConfig({
     }
   },
   server: {
+    port: 5174,
     proxy: {
       '/api': 'http://localhost:8080',
       '/elegant-2026': 'http://localhost:8080',

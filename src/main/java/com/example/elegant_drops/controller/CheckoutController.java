@@ -12,14 +12,15 @@ import com.mercadopago.client.preference.PreferenceBackUrlsRequest;
 import com.mercadopago.resources.preference.Preference;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+import java.util.regex.Pattern;
 
 @Controller
 public class CheckoutController {
@@ -32,15 +33,100 @@ public class CheckoutController {
     @Value("${mp.public-key}") private String mpPublicKey;
     @Value("${app.url:http://localhost:8080}") private String appUrl;
 
+    // ── VALIDACIONES ──────────────────────────────────────
+    private static final Pattern RUT_PATTERN = Pattern.compile("^[0-9]{7,8}-[0-9Kk]$");
+    private static final Pattern TELEFONO_PATTERN = Pattern.compile("^(\\+?56)?[0-9]{8,9}$");
+    private static final Pattern EMAIL_PATTERN = Pattern.compile("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$");
+    private static final Pattern SOLO_LETRAS = Pattern.compile("^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\\s\\-']{2,50}$");
+
+    private boolean validarRut(String rut) {
+        if (rut == null) return false;
+        rut = rut.trim().toUpperCase().replace(".", "");
+        if (!RUT_PATTERN.matcher(rut).matches()) return false;
+
+        String[] partes = rut.split("-");
+        String cuerpo = partes[0];
+        char dvIngresado = partes[1].charAt(0);
+
+        int suma = 0;
+        int multiplo = 2;
+        for (int i = cuerpo.length() - 1; i >= 0; i--) {
+            suma += Character.getNumericValue(cuerpo.charAt(i)) * multiplo;
+            multiplo = multiplo == 7 ? 2 : multiplo + 1;
+        }
+
+        int dvEsperado = 11 - (suma % 11);
+        char dvCalculado;
+        if (dvEsperado == 11) dvCalculado = '0';
+        else if (dvEsperado == 10) dvCalculado = 'K';
+        else dvCalculado = Character.forDigit(dvEsperado, 10);
+
+        return dvIngresado == dvCalculado;
+    }
+
+    private Map<String, String> validarDatos(String nombre, String apellido, String rut,
+                                             String telefono, String correo, String tipo,
+                                             String direccion, String estacion) {
+        Map<String, String> errores = new LinkedHashMap<>();
+
+        if (!SOLO_LETRAS.matcher(nombre != null ? nombre : "").matches())
+            errores.put("nombre", "Nombre inválido — solo letras, mínimo 2 caracteres");
+
+        if (!SOLO_LETRAS.matcher(apellido != null ? apellido : "").matches())
+            errores.put("apellido", "Apellido inválido — solo letras, mínimo 2 caracteres");
+
+        if (!validarRut(rut))
+            errores.put("rut", "RUT inválido — formato: 12345678-9");
+
+        if (telefono == null || !TELEFONO_PATTERN.matcher(telefono.trim().replace(" ", "")).matches())
+            errores.put("telefono", "Teléfono inválido — formato chileno requerido");
+
+        if (correo == null || !EMAIL_PATTERN.matcher(correo.trim()).matches())
+            errores.put("correo", "Correo electrónico inválido");
+
+        if ("envio".equals(tipo)) {
+            if (direccion == null || direccion.trim().length() < 10)
+                errores.put("direccion", "Dirección inválida — mínimo 10 caracteres");
+            if (direccion != null && direccion.trim().length() > 200)
+                errores.put("direccion", "Dirección demasiado larga");
+        }
+
+        if ("retiro".equals(tipo)) {
+            if (estacion == null || estacion.trim().isEmpty())
+                errores.put("estacion", "Selecciona una estación de retiro");
+        }
+
+        return errores;
+    }
+
+    // ── PÁGINAS THYMELEAF (mientras migramos a React) ─────
     @GetMapping("/checkout")
     public String checkout(Model model) {
         model.addAttribute("mpPublicKey", mpPublicKey);
         return "checkout";
     }
 
-    @PostMapping("/checkout/crear-preferencia")
+    // ── API REST PARA REACT ───────────────────────────────
+    @PostMapping("/api/checkout/validar")
     @ResponseBody
-    public String crearPreferencia(
+    public ResponseEntity<?> validar(
+            @RequestParam String nombre,
+            @RequestParam String apellido,
+            @RequestParam String rut,
+            @RequestParam String telefono,
+            @RequestParam String correo,
+            @RequestParam String tipo,
+            @RequestParam(required = false) String direccion,
+            @RequestParam(required = false) String estacion) {
+
+        Map<String, String> errores = validarDatos(nombre, apellido, rut, telefono, correo, tipo, direccion, estacion);
+        if (!errores.isEmpty()) return ResponseEntity.badRequest().body(errores);
+        return ResponseEntity.ok(Map.of("valido", true));
+    }
+
+    @PostMapping("/api/checkout/crear-preferencia")
+    @ResponseBody
+    public ResponseEntity<?> crearPreferenciaApi(
             @RequestParam String nombre,
             @RequestParam String apellido,
             @RequestParam String rut,
@@ -53,16 +139,19 @@ public class CheckoutController {
             @RequestParam String total,
             @RequestParam String itemsJson) {
 
+        Map<String, String> errores = validarDatos(nombre, apellido, rut, telefono, correo, tipo, direccion, estacion);
+        if (!errores.isEmpty()) return ResponseEntity.badRequest().body(errores);
+
         try {
             String externalReference = correo + "-" + System.currentTimeMillis();
 
             Pedido pedido = new Pedido();
             pedido.setExternalReference(externalReference);
-            pedido.setNombre(nombre);
-            pedido.setApellido(apellido);
-            pedido.setRut(rut);
-            pedido.setTelefono(telefono);
-            pedido.setCorreo(correo);
+            pedido.setNombre(nombre.trim());
+            pedido.setApellido(apellido.trim());
+            pedido.setRut(rut.trim().toUpperCase());
+            pedido.setTelefono(telefono.trim());
+            pedido.setCorreo(correo.trim().toLowerCase());
             pedido.setTipoEntrega(tipo);
             pedido.setDireccion(direccion);
             pedido.setEstacion(estacion);
@@ -72,28 +161,24 @@ public class CheckoutController {
             pedido.setEstado("PENDIENTE");
             pedido.setFecha(LocalDateTime.now());
             pedidoRepository.save(pedido);
-            System.out.println("=== PEDIDO GUARDADO: " + externalReference + " ===");
 
             List<PreferenceItemRequest> items = new ArrayList<>();
-            String[] itemsArray = itemsJson.split("\\|");
-
-            for (String itemStr : itemsArray) {
+            for (String itemStr : itemsJson.split("\\|")) {
                 String[] parts = itemStr.split(";");
-                if (parts.length >= 4) {
-                    PreferenceItemRequest item = PreferenceItemRequest.builder()
+                if (parts.length >= 3) {
+                    items.add(PreferenceItemRequest.builder()
                             .title(parts[0])
                             .quantity(Integer.parseInt(parts[1]))
                             .unitPrice(new BigDecimal(parts[2]))
                             .currencyId("CLP")
-                            .build();
-                    items.add(item);
+                            .build());
                 }
             }
 
             PreferenceBackUrlsRequest backUrls = PreferenceBackUrlsRequest.builder()
-                    .success(appUrl + "/checkout/exito")
-                    .failure(appUrl + "/checkout/fallo")
-                    .pending(appUrl + "/checkout/pendiente")
+                    .success(appUrl + "/confirmacion")
+                    .failure(appUrl + "/error-pago")
+                    .pending(appUrl + "/pendiente")
                     .build();
 
             PreferenceRequest preferenceRequest = PreferenceRequest.builder()
@@ -103,11 +188,145 @@ public class CheckoutController {
                     .externalReference(externalReference)
                     .build();
 
-            PreferenceClient client = new PreferenceClient();
-            Preference preference = client.create(preferenceRequest);
+            Preference preference = new PreferenceClient().create(preferenceRequest);
+            return ResponseEntity.ok(Map.of("preferenceId", preference.getId()));
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(Map.of("error", "Error al procesar el pago"));
+        }
+    }
+
+    @GetMapping("/api/checkout/exito")
+    @ResponseBody
+    public ResponseEntity<?> exitoApi(
+            @RequestParam(required = false) String payment_id,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String external_reference) {
+
+        try {
+            Pedido pedido = pedidoRepository.findByExternalReference(external_reference).orElse(null);
+
+            if (pedido != null && "PENDIENTE".equals(pedido.getEstado())) {
+                pedido.setEstado("COMPLETADO");
+                pedidoRepository.save(pedido);
+
+                int totalNumerico = 0;
+                StringBuilder detalle = new StringBuilder();
+
+                if (pedido.getItemsJson() != null) {
+                    for (String itemStr : pedido.getItemsJson().split("\\|")) {
+                        String[] parts = itemStr.split(";");
+                        if (parts.length >= 3) {
+                            int cantidad = Integer.parseInt(parts[1]);
+                            int precio = Integer.parseInt(parts[2]);
+                            totalNumerico += precio * cantidad;
+                            detalle.append(cantidad).append("x ").append(parts[0])
+                                    .append(" — $").append(precio * cantidad).append("\n");
+                        }
+                    }
+                }
+
+                Venta venta = new Venta();
+                venta.setFecha(LocalDateTime.now());
+                venta.setTotal(totalNumerico);
+                venta.setTipoEntrega(pedido.getTipoEntrega());
+                venta.setCodigoTransaccion(payment_id != null ? payment_id : "N/A");
+                venta.setDetalle(detalle.toString());
+                ventaRepository.save(venta);
+
+                String html = construirHtmlPedido(pedido);
+                emailService.enviar(pedido.getCorreo(), "Elegant Drops · Confirmación de pedido", html);
+                emailService.enviar(adminEmail, "Nuevo pedido — " + pedido.getNombre() + " " + pedido.getApellido(), html);
+
+                return ResponseEntity.ok(Map.of(
+                        "nombre", pedido.getNombre(),
+                        "correo", pedido.getCorreo(),
+                        "tipo", pedido.getTipoEntrega(),
+                        "total", pedido.getTotal(),
+                        "codigoTransaccion", payment_id != null ? payment_id : "N/A"
+                ));
+            }
+
+            if (pedido != null) {
+                return ResponseEntity.ok(Map.of(
+                        "nombre", pedido.getNombre(),
+                        "correo", pedido.getCorreo(),
+                        "tipo", pedido.getTipoEntrega(),
+                        "total", pedido.getTotal(),
+                        "codigoTransaccion", payment_id != null ? payment_id : "N/A"
+                ));
+            }
+
+            return ResponseEntity.notFound().build();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(Map.of("error", "Error al procesar confirmación"));
+        }
+    }
+
+    // ── ENDPOINTS THYMELEAF (compatibilidad mientras migramos) ──
+    @PostMapping("/checkout/crear-preferencia")
+    @ResponseBody
+    public String crearPreferencia(
+            @RequestParam String nombre, @RequestParam String apellido,
+            @RequestParam String rut, @RequestParam String telefono,
+            @RequestParam String correo, @RequestParam String tipo,
+            @RequestParam(required = false) String direccion,
+            @RequestParam(required = false) String estacion,
+            @RequestParam String resumenPedido, @RequestParam String total,
+            @RequestParam String itemsJson) {
+
+        Map<String, String> errores = validarDatos(nombre, apellido, rut, telefono, correo, tipo, direccion, estacion);
+        if (!errores.isEmpty()) return "error-validacion";
+
+        try {
+            String externalReference = correo + "-" + System.currentTimeMillis();
+            Pedido pedido = new Pedido();
+            pedido.setExternalReference(externalReference);
+            pedido.setNombre(nombre.trim());
+            pedido.setApellido(apellido.trim());
+            pedido.setRut(rut.trim().toUpperCase());
+            pedido.setTelefono(telefono.trim());
+            pedido.setCorreo(correo.trim().toLowerCase());
+            pedido.setTipoEntrega(tipo);
+            pedido.setDireccion(direccion);
+            pedido.setEstacion(estacion);
+            pedido.setResumenPedido(resumenPedido);
+            pedido.setTotal(total);
+            pedido.setItemsJson(itemsJson);
+            pedido.setEstado("PENDIENTE");
+            pedido.setFecha(LocalDateTime.now());
+            pedidoRepository.save(pedido);
+
+            List<PreferenceItemRequest> items = new ArrayList<>();
+            for (String itemStr : itemsJson.split("\\|")) {
+                String[] parts = itemStr.split(";");
+                if (parts.length >= 3) {
+                    items.add(PreferenceItemRequest.builder()
+                            .title(parts[0])
+                            .quantity(Integer.parseInt(parts[1]))
+                            .unitPrice(new BigDecimal(parts[2]))
+                            .currencyId("CLP")
+                            .build());
+                }
+            }
+
+            PreferenceBackUrlsRequest backUrls = PreferenceBackUrlsRequest.builder()
+                    .success(appUrl + "/checkout/exito")
+                    .failure(appUrl + "/checkout/fallo")
+                    .pending(appUrl + "/checkout/pendiente")
+                    .build();
+
+            Preference preference = new PreferenceClient().create(
+                    PreferenceRequest.builder()
+                            .items(items).backUrls(backUrls)
+                            .autoReturn("approved")
+                            .externalReference(externalReference)
+                            .build());
 
             return preference.getId();
-
         } catch (Exception e) {
             e.printStackTrace();
             return "error";
@@ -121,36 +340,24 @@ public class CheckoutController {
             @RequestParam(required = false) String external_reference,
             Model model) {
 
-        System.out.println("=== CHECKOUT EXITO ===");
-        System.out.println("payment_id: " + payment_id);
-        System.out.println("status: " + status);
-        System.out.println("external_reference: " + external_reference);
-
         try {
             Pedido pedido = pedidoRepository.findByExternalReference(external_reference).orElse(null);
-            System.out.println("pedido encontrado: " + (pedido != null ? pedido.getEstado() : "NULL"));
 
             if (pedido != null && "PENDIENTE".equals(pedido.getEstado())) {
-                System.out.println("=== ENTRANDO AL IF ===");
-
                 pedido.setEstado("COMPLETADO");
                 pedidoRepository.save(pedido);
-                System.out.println("=== PEDIDO MARCADO COMPLETADO ===");
 
                 int totalNumerico = 0;
                 StringBuilder detalle = new StringBuilder();
-
                 if (pedido.getItemsJson() != null) {
                     for (String itemStr : pedido.getItemsJson().split("\\|")) {
                         String[] parts = itemStr.split(";");
-                        if (parts.length >= 4) {
+                        if (parts.length >= 3) {
                             int cantidad = Integer.parseInt(parts[1]);
                             int precio = Integer.parseInt(parts[2]);
                             totalNumerico += precio * cantidad;
-                            detalle.append(cantidad).append("x ")
-                                    .append(parts[0])
-                                    .append(" — $").append(precio * cantidad)
-                                    .append("\n");
+                            detalle.append(cantidad).append("x ").append(parts[0])
+                                    .append(" — $").append(precio * cantidad).append("\n");
                         }
                     }
                 }
@@ -162,18 +369,12 @@ public class CheckoutController {
                 venta.setCodigoTransaccion(payment_id != null ? payment_id : "N/A");
                 venta.setDetalle(detalle.toString());
                 ventaRepository.save(venta);
-                System.out.println("=== VENTA GUARDADA: $" + totalNumerico + " ===");
 
                 String html = construirHtmlPedido(pedido);
                 emailService.enviar(pedido.getCorreo(), "Elegant Drops · Confirmación de pedido", html);
                 emailService.enviar(adminEmail, "Nuevo pedido — " + pedido.getNombre() + " " + pedido.getApellido(), html);
-                System.out.println("=== CORREOS ENVIADOS ===");
-
-            } else {
-                System.out.println("=== NO ENTRO AL IF — pedido: " + (pedido != null ? pedido.getEstado() : "NULL") + " ===");
             }
 
-            // SIEMPRE cargar datos al modelo si el pedido existe
             if (pedido != null) {
                 model.addAttribute("nombre", pedido.getNombre());
                 model.addAttribute("correo", pedido.getCorreo());
@@ -181,12 +382,9 @@ public class CheckoutController {
                 model.addAttribute("total", pedido.getTotal());
                 model.addAttribute("codigoTransaccion", payment_id != null ? payment_id : "N/A");
             }
-
         } catch (Exception e) {
-            System.out.println("=== ERROR EN EXITO: " + e.getMessage() + " ===");
             e.printStackTrace();
         }
-
         return "confirmacion";
     }
 
@@ -218,16 +416,11 @@ public class CheckoutController {
                     <p style="color: #a89890; font-size: 13px; margin-bottom: 24px;">Gracias por tu compra. Aquí está el resumen de tu pedido:</p>
                     <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(201,150,122,0.1); border-radius: 12px; padding: 20px; margin-bottom: 24px; font-size: 13px; line-height: 2;">
                         <p><strong>Nombre:</strong> """ + pedido.getNombre() + " " + pedido.getApellido() + """
-                        </p>
-                        <p><strong>RUT:</strong> """ + pedido.getRut() + """
-                        </p>
-                        <p><strong>Teléfono:</strong> """ + pedido.getTelefono() + """
-                        </p>
-                        <p><strong>Correo:</strong> """ + pedido.getCorreo() + """
-                        </p>
-                        <p><strong>Tipo de entrega:</strong> """ + ("envio".equals(pedido.getTipoEntrega()) ? "Envío a domicilio vía Blue Express" : "Retiro en metro") + """
-                        </p>
-                        """ + entrega + """
+                        </p><p><strong>RUT:</strong> """ + pedido.getRut() + """
+                        </p><p><strong>Teléfono:</strong> """ + pedido.getTelefono() + """
+                        </p><p><strong>Correo:</strong> """ + pedido.getCorreo() + """
+                        </p><p><strong>Tipo de entrega:</strong> """ + ("envio".equals(pedido.getTipoEntrega()) ? "Envío a domicilio vía Blue Express" : "Retiro en metro") + """
+                        </p>""" + entrega + """
                     </div>
                     <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(201,150,122,0.1); border-radius: 12px; padding: 20px; margin-bottom: 24px; font-size: 13px; line-height: 2;">
                         <h3 style="font-size: 11px; letter-spacing: 3px; color: #c9967a; text-transform: uppercase; margin-bottom: 12px;">Detalle del pedido</h3>

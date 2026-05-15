@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:tienda": "vite build --config vite.tienda.config.js",
+    "dev:tienda": "vite --config vite.tienda.config.js",
     "lint": "eslint .",
     "preview": "vite preview"
   },
