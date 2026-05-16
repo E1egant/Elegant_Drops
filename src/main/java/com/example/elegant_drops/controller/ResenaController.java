@@ -5,7 +5,6 @@ import com.example.elegant_drops.repository.ResenaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -15,11 +14,6 @@ import java.util.Map;
 public class ResenaController {
 
     @Autowired private ResenaRepository resenaRepository;
-
-    @GetMapping("/resena")
-    public String paginaResena(Model model) {
-        return "forward:/tienda/index.html";
-    }
 
     @PostMapping("/api/resena/guardar")
     @ResponseBody
