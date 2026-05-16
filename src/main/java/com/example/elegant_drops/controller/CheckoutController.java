@@ -83,6 +83,11 @@ public class CheckoutController {
         return errores;
     }
 
+    @GetMapping("/api/checkout/config")
+    public ResponseEntity<?> config() {
+        return ResponseEntity.ok(Map.of("publicKey", mpPublicKey));
+    }
+
     @PostMapping("/api/checkout/crear-preferencia")
     public ResponseEntity<?> crearPreferencia(
             @RequestParam String nombre, @RequestParam String apellido,
@@ -142,9 +147,14 @@ public class CheckoutController {
                             .build());
 
             return ResponseEntity.ok(Map.of("preferenceId", preference.getId()));
+        } catch (com.mercadopago.exceptions.MPApiException e) {
+            e.printStackTrace();
+            System.out.println("MP Status: " + e.getStatusCode());
+            System.out.println("MP Response: " + e.getApiResponse().getContent());
+            return ResponseEntity.status(500).body(Map.of("error", "Error al procesar el pago: " + e.getApiResponse().getContent()));
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.status(500).body(Map.of("error", "Error al procesar el pago"));
+            return ResponseEntity.status(500).body(Map.of("error", "Error general: " + e.getMessage()));
         }
     }
 

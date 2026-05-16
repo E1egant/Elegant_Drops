@@ -34,11 +34,13 @@ export default function Checkout() {
     const [errores, setErrores] = useState({})
     const [procesando, setProcesando] = useState(false)
     const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
+    const [mpPublicKey, setMpPublicKey] = useState(null)
 
     useEffect(() => {
         if (carrito.length === 0) navigate('/')
         const handleResize = () => setIsMobile(window.innerWidth < 768)
         window.addEventListener('resize', handleResize)
+        axios.get('/api/checkout/config').then(res => setMpPublicKey(res.data.publicKey))
         return () => window.removeEventListener('resize', handleResize)
     }, [carrito])
 
@@ -46,7 +48,6 @@ export default function Checkout() {
         let { name, value } = e.target
         const limites = { nombre: 50, apellido: 50, rut: 12, telefono: 15, correo: 100, direccion: 200, estacion: 100 }
 
-        // Auto formato RUT
         if (name === 'rut') {
             value = value.replace(/[^0-9kK]/g, '').toUpperCase()
             if (value.length > 9) value = value.slice(0, 9)
@@ -100,6 +101,7 @@ export default function Checkout() {
     const pagarConTarjeta = async () => {
         const e = validar()
         if (Object.keys(e).length > 0) { setErrores(e); return }
+        if (!mpPublicKey) { alert('Error de configuración. Intenta nuevamente.'); return }
         setProcesando(true)
         try {
             const formData = new FormData()
@@ -112,7 +114,7 @@ export default function Checkout() {
             const res = await axios.post('/api/checkout/crear-preferencia', formData)
             const { preferenceId } = res.data
 
-            const mp = new window.MercadoPago(window.MP_PUBLIC_KEY, { locale: 'es-CL' })
+            const mp = new window.MercadoPago(mpPublicKey, { locale: 'es-CL' })
             mp.checkout({ preference: { id: preferenceId }, autoOpen: true })
         } catch (err) {
             if (err.response?.data) setErrores(err.response.data)
@@ -147,7 +149,6 @@ export default function Checkout() {
     return (
         <div style={{ minHeight: '100vh', background: 'var(--bg-main)' }}>
 
-            {/* NAVBAR */}
             <nav style={{
                 height: 72, background: 'rgba(17,16,9,0.97)', backdropFilter: 'blur(20px)',
                 borderBottom: '1px solid var(--border-soft)', display: 'flex', alignItems: 'center',
@@ -173,10 +174,8 @@ export default function Checkout() {
 
                 <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 48 }}>
 
-                    {/* FORMULARIO */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
 
-                        {/* TIPO ENTREGA */}
                         <div>
                             <p style={{ fontSize: 10, fontWeight: 800, color: 'var(--gold)', textTransform: 'uppercase', letterSpacing: '0.15em', marginBottom: 16 }}>
                                 1. Tipo de entrega
@@ -202,7 +201,6 @@ export default function Checkout() {
                             {errores.tipo && <p style={{ fontSize: 10, color: '#ef4444', marginTop: 8 }}>{errores.tipo}</p>}
                         </div>
 
-                        {/* DATOS */}
                         <div>
                             <p style={{ fontSize: 10, fontWeight: 800, color: 'var(--gold)', textTransform: 'uppercase', letterSpacing: '0.15em', marginBottom: 16 }}>
                                 2. Tus datos
@@ -264,7 +262,6 @@ export default function Checkout() {
                             </div>
                         </div>
 
-                        {/* BOTONES */}
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                             <button className="btn-primary" onClick={pagarConTarjeta} disabled={procesando}
                                     style={{ width: '100%', padding: '16px', opacity: procesando ? 0.7 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, fontSize: 12 }}>
@@ -289,7 +286,6 @@ export default function Checkout() {
                         </div>
                     </div>
 
-                    {/* RESUMEN */}
                     <div>
                         <p style={{ fontSize: 10, fontWeight: 800, color: 'var(--gold)', textTransform: 'uppercase', letterSpacing: '0.15em', marginBottom: 16 }}>
                             Resumen del pedido
