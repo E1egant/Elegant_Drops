@@ -28,11 +28,11 @@ function validarRutFrontend(rut) {
 
 export default function Checkout() {
     const [toast, setToast] = useState(null)
-    const mostrarToast = (msg, tipo = 'error') => {
-        setToast({ msg, tipo })
+    const mostrarToast = (msg) => {
+        setToast(msg)
         setTimeout(() => setToast(null), 4000)
     }
-    const { carrito, total } = useCarrito()
+    const { carrito, total, vaciar } = useCarrito()
     const navigate = useNavigate()
     const [tipo, setTipo] = useState(null)
     const [form, setForm] = useState({ nombre: '', apellido: '', rut: '', telefono: '', correo: '', direccion: '', estacion: '' })
@@ -99,24 +99,6 @@ export default function Checkout() {
         }).join('')
     }
 
-    const _enviarWhatsApp = () => {
-        let mensaje = `Hola, quiero hacer un pedido 🛍️\n\n`
-        mensaje += `*Datos:*\n`
-        mensaje += `Nombre: ${form.nombre} ${form.apellido}\n`
-        mensaje += `RUT: ${form.rut}\n`
-        mensaje += `Teléfono: ${form.telefono}\n`
-        mensaje += `Correo: ${form.correo}\n\n`
-        mensaje += `*Productos:*\n`
-        carrito.forEach(item => {
-            if (item.esPack) mensaje += `• ${item.cantidad}x Pack ${item.nombre} — $${(item.precio * item.cantidad).toLocaleString('es-CL')}\n`
-            else mensaje += `• ${item.cantidad}x ${item.marca} ${item.nombre} ${item.ml}ml — $${(item.precio * item.cantidad).toLocaleString('es-CL')}\n`
-        })
-        mensaje += `\n*Total: $${total.toLocaleString('es-CL')}*\n\n`
-        if (tipo === 'envio') mensaje += `*Entrega:* Envío a domicilio\nDirección: ${form.direccion}\n`
-        else mensaje += `*Entrega:* Retiro en Metro ${form.estacion}\n`
-        window.open(`https://wa.me/56982055029?text=${encodeURIComponent(mensaje)}`, '_blank')
-    }
-
     const finalizarPedido = async () => {
         const e = validar()
         if (Object.keys(e).length > 0) { setErrores(e); return }
@@ -129,18 +111,28 @@ export default function Checkout() {
             formData.append('total', '$' + total.toLocaleString('es-CL'))
             formData.append('itemsJson', construirItemsJson())
             await axios.post('/api/checkout/crear-preferencia', formData)
-            _enviarWhatsApp()
+            vaciar()
+
+            let mensaje = `Hola, quiero hacer un pedido 🛍️\n\n`
+            mensaje += `*Datos:*\n`
+            mensaje += `Nombre: ${form.nombre} ${form.apellido}\n`
+            mensaje += `RUT: ${form.rut}\n`
+            mensaje += `Teléfono: ${form.telefono}\n`
+            mensaje += `Correo: ${form.correo}\n\n`
+            mensaje += `*Productos:*\n`
+            carrito.forEach(item => {
+                if (item.esPack) mensaje += `• ${item.cantidad}x Pack ${item.nombre} — $${(item.precio * item.cantidad).toLocaleString('es-CL')}\n`
+                else mensaje += `• ${item.cantidad}x ${item.marca} ${item.nombre} ${item.ml}ml — $${(item.precio * item.cantidad).toLocaleString('es-CL')}\n`
+            })
+            mensaje += `\n*Total: $${total.toLocaleString('es-CL')}*\n\n`
+            if (tipo === 'envio') mensaje += `*Entrega:* Envío a domicilio\nDirección: ${form.direccion}\n`
+            else mensaje += `*Entrega:* Retiro en Metro ${form.estacion}\n`
+            window.open(`https://wa.me/56982055029?text=${encodeURIComponent(mensaje)}`, '_blank')
         } catch {
             mostrarToast('Error al procesar el pedido. Intenta nuevamente.')
         } finally {
             setProcesando(false)
         }
-    }
-
-    const finalizarWhatsApp = () => {
-        const e = validar()
-        if (Object.keys(e).length > 0) { setErrores(e); return }
-        _enviarWhatsApp()
     }
 
     return (
@@ -260,22 +252,18 @@ export default function Checkout() {
                         </div>
 
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                            <button className="btn-primary" onClick={finalizarPedido} disabled={procesando}
-                                    style={{ width: '100%', padding: '16px', opacity: procesando ? 0.7 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, fontSize: 12 }}>
-                                <i className="fa-solid fa-bag-shopping"></i>
-                                {procesando ? 'Procesando...' : 'Confirmar pedido'}
-                            </button>
-                            <button onClick={finalizarWhatsApp}
+                            <button onClick={finalizarPedido} disabled={procesando}
                                     style={{
                                         width: '100%', padding: '16px', borderRadius: 100, border: 'none',
                                         background: '#25D366', color: 'white', fontWeight: 800, fontSize: 12,
                                         textTransform: 'uppercase', letterSpacing: '0.12em', cursor: 'pointer',
-                                        transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10
+                                        transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+                                        opacity: procesando ? 0.7 : 1
                                     }}
                                     onMouseEnter={e => e.currentTarget.style.background = '#20b858'}
                                     onMouseLeave={e => e.currentTarget.style.background = '#25D366'}>
                                 <i className="fa-brands fa-whatsapp" style={{ fontSize: 18 }}></i>
-                                Coordinar por WhatsApp
+                                {procesando ? 'Procesando...' : 'Confirmar pedido por WhatsApp'}
                             </button>
                             <p style={{ fontSize: 10, color: 'var(--text-faint)', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
                                 Recibirás confirmación por correo
@@ -329,14 +317,12 @@ export default function Checkout() {
             {toast && (
                 <div style={{
                     position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)',
-                    background: toast.tipo === 'error' ? '#1a0a0a' : '#0a1a0a',
-                    border: `1px solid ${toast.tipo === 'error' ? '#ef4444' : 'var(--gold)'}`,
-                    color: toast.tipo === 'error' ? '#ef4444' : 'var(--gold)',
+                    background: '#1a0a0a', border: '1px solid #ef4444', color: '#ef4444',
                     padding: '14px 24px', borderRadius: 100, fontSize: 12, fontWeight: 700,
                     textTransform: 'uppercase', letterSpacing: '0.1em', zIndex: 999,
                     boxShadow: '0 8px 32px rgba(0,0,0,0.5)', whiteSpace: 'nowrap'
                 }}>
-                    {toast.msg}
+                    {toast}
                 </div>
             )}
         </div>

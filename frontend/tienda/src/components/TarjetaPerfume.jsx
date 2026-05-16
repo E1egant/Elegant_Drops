@@ -24,9 +24,9 @@ export default function TarjetaPerfume({ fragancia, onClick }) {
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
-            <p style={{ fontSize: 8, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: '0.15em' }}>
-              {esCompleto ? 'Precio' : 'Desde'}
-            </p>
+              <p style={{ fontSize: 8, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.15em' }}>
+                  {esCompleto ? 'Precio' : 'Desde'}
+              </p>
             <p style={{ fontWeight: 700, fontSize: 16 }}>
               {precioMinimo ? `$${precioMinimo.toLocaleString('es-CL')}` : '—'}
             </p>

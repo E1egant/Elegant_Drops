@@ -27,6 +27,7 @@ public class AdminController {
     @Autowired private CloudinaryService cloudinaryService;
     @Autowired private ResenaRepository resenaRepository;
     @Autowired private VentaRepository ventaRepository;
+    @Autowired private PedidoRepository pedidoRepository;
     @Value("${admin.path}") private String adminPath;
     @Value("${admin.user}") private String adminUser;
     @Value("${admin.password}") private String adminPassword;
@@ -36,7 +37,6 @@ public class AdminController {
 
     private String sinSesion() { return "redirect:/" + adminPath + "/login"; }
 
-    // ── LOGIN ──────────────────────────────────────────────
     @GetMapping("/login")
     public String showLogin(Model model) {
         model.addAttribute("adminPath", adminPath);
@@ -58,7 +58,6 @@ public class AdminController {
         return "redirect:/";
     }
 
-    // ── DASHBOARD (solo sirve el HTML, React toma el control) ──
     @GetMapping("/dashboard")
     public String dashboard(HttpSession session, Model model) {
         if (session.getAttribute("adminLogged") == null) return sinSesion();
@@ -66,13 +65,11 @@ public class AdminController {
         return "admin/dashboard";
     }
 
-    // ── API: FRAGANCIAS ────────────────────────────────────
     @GetMapping("/api/fragancias")
     @ResponseBody
     public ResponseEntity<?> listarFragancias(HttpSession session) {
         if (session.getAttribute("adminLogged") == null)
             return ResponseEntity.status(401).build();
-
         List<Fragancia> fragancias = fraganciaService.listarTodas();
         fragancias.forEach(f -> f.getFormatos().sort(Comparator.comparingInt(Formato::getMl)));
         return ResponseEntity.ok(fragancias);
@@ -112,23 +109,18 @@ public class AdminController {
             fragancia.setGenero(genero);
             fragancia.setTipo(tipo);
             fragancia.setDescripcion(descripcion);
-            if (orden != null) {
-                fragancia.setOrden(orden);
-            }
-            if (categoria != null && !categoria.isEmpty()) {
+            if (orden != null) fragancia.setOrden(orden);
+            if (categoria != null && !categoria.isEmpty())
                 fragancia.setCategoria(CategoriaFragancia.valueOf(categoria));
-            }
 
             if (imagenFile != null && !imagenFile.isEmpty()) {
-                if (fragancia.getImagen() != null && fragancia.getImagen().startsWith("http")) {
+                if (fragancia.getImagen() != null && fragancia.getImagen().startsWith("http"))
                     cloudinaryService.eliminarImagen(fragancia.getImagen());
-                }
                 fragancia.setImagen(cloudinaryService.subirImagen(imagenFile));
             }
 
             fraganciaService.guardar(fragancia);
             return ResponseEntity.ok(fragancia);
-
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(500).body("Error al guardar");
@@ -165,15 +157,11 @@ public class AdminController {
             Long id = Long.valueOf(item.get("id").toString());
             Integer nuevoOrden = Integer.valueOf(item.get("orden").toString());
             Fragancia f = fraganciaRepository.findById(id).orElse(null);
-            if (f != null) {
-                f.setOrden(nuevoOrden);
-                fraganciaRepository.save(f);
-            }
+            if (f != null) { f.setOrden(nuevoOrden); fraganciaRepository.save(f); }
         }
         return ResponseEntity.ok().build();
     }
 
-    // ── API: FORMATOS ──────────────────────────────────────
     @PostMapping("/api/formatos/guardar")
     @ResponseBody
     public ResponseEntity<?> guardarFormato(
@@ -207,7 +195,6 @@ public class AdminController {
         return ResponseEntity.ok().build();
     }
 
-    // ── API: VENTAS Y RESEÑAS ──────────────────────────────
     @GetMapping("/api/ventas")
     @ResponseBody
     public ResponseEntity<?> listarVentas(HttpSession session) {
@@ -218,13 +205,13 @@ public class AdminController {
         LocalDateTime ahora = LocalDateTime.now();
 
         long gananciasSemana = ventas.stream()
-                .filter(v -> v.getFecha().isAfter(ahora.minusDays(7)))
+                .filter(v -> "PAGADO".equals(v.getEstado()) && v.getFecha().isAfter(ahora.minusDays(7)))
                 .mapToLong(Venta::getTotal).sum();
         long gananciasMes = ventas.stream()
-                .filter(v -> v.getFecha().isAfter(ahora.withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0)))
+                .filter(v -> "PAGADO".equals(v.getEstado()) && v.getFecha().isAfter(ahora.withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0)))
                 .mapToLong(Venta::getTotal).sum();
         long gananciasAnio = ventas.stream()
-                .filter(v -> v.getFecha().isAfter(ahora.withDayOfYear(1).withHour(0).withMinute(0).withSecond(0)))
+                .filter(v -> "PAGADO".equals(v.getEstado()) && v.getFecha().isAfter(ahora.withDayOfYear(1).withHour(0).withMinute(0).withSecond(0)))
                 .mapToLong(Venta::getTotal).sum();
 
         Map<String, Object> resultado = new HashMap<>();
@@ -233,6 +220,28 @@ public class AdminController {
         resultado.put("gananciasMes", gananciasMes);
         resultado.put("gananciasAnio", gananciasAnio);
         return ResponseEntity.ok(resultado);
+    }
+
+    @PostMapping("/api/ventas/{id}/estado")
+    @ResponseBody
+    public ResponseEntity<?> cambiarEstadoVenta(@PathVariable Long id,
+                                                @RequestParam String estado, HttpSession session) {
+        if (session.getAttribute("adminLogged") == null)
+            return ResponseEntity.status(401).build();
+        Venta v = ventaRepository.findById(id).orElse(null);
+        if (v == null) return ResponseEntity.notFound().build();
+        v.setEstado(estado);
+        ventaRepository.save(v);
+        return ResponseEntity.ok(v);
+    }
+
+    @DeleteMapping("/api/ventas/{id}")
+    @ResponseBody
+    public ResponseEntity<?> eliminarVenta(@PathVariable Long id, HttpSession session) {
+        if (session.getAttribute("adminLogged") == null)
+            return ResponseEntity.status(401).build();
+        ventaRepository.deleteById(id);
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/api/resenas")

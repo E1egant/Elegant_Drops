@@ -20,6 +20,9 @@ public class Venta {
     private Integer total;
     private String tipoEntrega;
     private String codigoTransaccion;
+    private String estado;
+    private String nombre;
+    private String correo;
 
     @Column(columnDefinition = "TEXT")
     private String detalle;
