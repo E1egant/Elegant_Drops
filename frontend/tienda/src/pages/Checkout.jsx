@@ -127,6 +127,7 @@ export default function Checkout() {
             mensaje += `\n*Total: $${total.toLocaleString('es-CL')}*\n\n`
             if (tipo === 'envio') mensaje += `*Entrega:* Envío a domicilio\nDirección: ${form.direccion}\n`
             else mensaje += `*Entrega:* Retiro en Metro ${form.estacion}\n`
+            mensaje += `\n⭐ Deja tu reseña: https://elegantdrops.cl/resena`
             window.open(`https://wa.me/56982055029?text=${encodeURIComponent(mensaje)}`, '_blank')
         } catch {
             mostrarToast('Error al procesar el pedido. Intenta nuevamente.')

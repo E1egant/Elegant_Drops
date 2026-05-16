@@ -14,7 +14,8 @@ public class SpaController {
             "/checkout",
             "/confirmacion",
             "/error-pago",
-            "/pendiente"
+            "/pendiente",
+            "/resena"
     })
     public String spa() {
         return "forward:/tienda/index.html";
