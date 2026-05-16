@@ -27,7 +27,7 @@ function validarRutFrontend(rut) {
 }
 
 export default function Checkout() {
-    const { carrito, total, vaciar } = useCarrito()
+    const { carrito, total } = useCarrito()
     const navigate = useNavigate()
     const [tipo, setTipo] = useState(null)
     const [form, setForm] = useState({ nombre: '', apellido: '', rut: '', telefono: '', correo: '', direccion: '', estacion: '' })
@@ -43,9 +43,22 @@ export default function Checkout() {
     }, [carrito])
 
     const handleChange = (e) => {
-        const { name, value } = e.target
+        let { name, value } = e.target
         const limites = { nombre: 50, apellido: 50, rut: 12, telefono: 15, correo: 100, direccion: 200, estacion: 100 }
-        if (value.length > (limites[name] || 200)) return
+
+        // Auto formato RUT
+        if (name === 'rut') {
+            value = value.replace(/[^0-9kK]/g, '').toUpperCase()
+            if (value.length > 9) value = value.slice(0, 9)
+            if (value.length > 1) {
+                const cuerpo = value.slice(0, -1)
+                const dv = value.slice(-1)
+                value = cuerpo + '-' + dv
+            }
+        } else {
+            if (value.length > (limites[name] || 200)) return
+        }
+
         setForm({ ...form, [name]: value })
         if (errores[name]) setErrores({ ...errores, [name]: null })
     }
@@ -57,7 +70,7 @@ export default function Checkout() {
         if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s\-']{2,50}$/.test(form.apellido.trim()))
             e.apellido = 'Apellido inválido — solo letras, mínimo 2 caracteres'
         if (!validarRutFrontend(form.rut))
-            e.rut = 'RUT inválido — formato: 12345678-9'
+            e.rut = 'RUT inválido — verifica que sea correcto'
         if (!/^(\+?56)?[0-9]{8,9}$/.test(form.telefono.trim().replace(/\s/g, '')))
             e.telefono = 'Teléfono inválido — formato chileno requerido'
         if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(form.correo.trim()))
@@ -207,7 +220,7 @@ export default function Checkout() {
                                 </div>
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                                     <div>
-                                        <input className={`input ${errores.rut ? 'error' : ''}`} name="rut" value={form.rut} onChange={handleChange} placeholder="RUT (12345678-9)" />
+                                        <input className={`input ${errores.rut ? 'error' : ''}`} name="rut" value={form.rut} onChange={handleChange} placeholder="RUT (ej: 12345678-9)" maxLength={12} />
                                         {errores.rut && <p style={{ fontSize: 10, color: '#ef4444', marginTop: 4 }}>{errores.rut}</p>}
                                     </div>
                                     <div>
@@ -288,7 +301,6 @@ export default function Checkout() {
                                         display: 'flex', alignItems: 'center', gap: 16,
                                         paddingBottom: 16, borderBottom: '1px solid var(--border-soft)'
                                     }}>
-                                        {/* IMAGEN */}
                                         <div style={{ width: 64, height: 64, borderRadius: 10, overflow: 'hidden', flexShrink: 0, background: '#111009', border: '1px solid var(--border-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                             {item.imagen ? (
                                                 <img src={item.imagen} alt={item.nombre} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
@@ -296,7 +308,6 @@ export default function Checkout() {
                                                 <i className="fa-solid fa-spray-can-sparkles" style={{ fontSize: 20, color: 'var(--text-faint)' }}></i>
                                             )}
                                         </div>
-                                        {/* INFO */}
                                         <div style={{ flex: 1 }}>
                                             <p style={{ fontSize: 9, fontWeight: 900, color: 'var(--gold)', textTransform: 'uppercase', letterSpacing: '0.2em', marginBottom: 3 }}>
                                                 {item.esPack ? 'Pack' : item.marca}
@@ -306,7 +317,6 @@ export default function Checkout() {
                                                 {item.esPack ? `× ${item.cantidad}` : `${item.ml}ml × ${item.cantidad}`}
                                             </p>
                                         </div>
-                                        {/* PRECIO */}
                                         <span style={{ fontWeight: 700, fontSize: 15, flexShrink: 0 }}>
                       ${(item.precio * item.cantidad).toLocaleString('es-CL')}
                     </span>
