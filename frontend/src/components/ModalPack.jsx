@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import axios from 'axios'
 
 export default function ModalPack({ pack, fragancias, adminPath, onClose, onSave }) {
-    const [form, setForm] = useState({ nombre: '', descripcion: '', precio: '', orden: '' })
+    const [form, setForm] = useState({ nombre: '', descripcion: '', precio: '' })
     const [imagenFile, setImagenFile] = useState(null)
     const [preview, setPreview] = useState(null)
     const [items, setItems] = useState([])
@@ -14,7 +14,6 @@ export default function ModalPack({ pack, fragancias, adminPath, onClose, onSave
                 nombre: pack.nombre || '',
                 descripcion: pack.descripcion || '',
                 precio: pack.precio || '',
-                orden: pack.orden || '',
             })
             setPreview(pack.imagen || null)
             setItems(pack.items?.map(i => ({
@@ -111,19 +110,13 @@ export default function ModalPack({ pack, fragancias, adminPath, onClose, onSave
                                   placeholder="Describe el pack..." rows={2} style={{ resize: 'none' }} />
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                        <div>
-                            <label style={{ fontSize: 10, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em', display: 'block', marginBottom: 6 }}>Posición en tienda</label>
-                            <input className="input" name="orden" type="number" value={form.orden} onChange={handleChange} placeholder="ej: 1" min={1} />
-                        </div>
-                        <div>
-                            <label style={{ fontSize: 10, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em', display: 'block', marginBottom: 6 }}>Imagen</label>
-                            <div className="file-input-wrapper">
-                                <input type="file" accept="image/*" onChange={handleFile} />
-                                <div className="file-input-label">
-                                    <span>📷</span>
-                                    <span>{imagenFile ? imagenFile.name : pack?.imagen ? 'Cambiar imagen' : 'Seleccionar imagen'}</span>
-                                </div>
+                    <div>
+                        <label style={{ fontSize: 10, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em', display: 'block', marginBottom: 6 }}>Imagen</label>
+                        <div className="file-input-wrapper">
+                            <input type="file" accept="image/*" onChange={handleFile} />
+                            <div className="file-input-label">
+                                <span>📷</span>
+                                <span>{imagenFile ? imagenFile.name : pack?.imagen ? 'Cambiar imagen' : 'Seleccionar imagen'}</span>
                             </div>
                         </div>
                     </div>

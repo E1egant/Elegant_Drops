@@ -64,7 +64,7 @@ export default function Completos() {
         />
       )}
       <PanelCarrito abierto={carritoAbierto} onCerrar={() => setCarritoAbierto(false)} />
-      <WhatsAppBtn />
+        <WhatsAppBtn oculto={carritoAbierto} />
     </div>
   )
 }

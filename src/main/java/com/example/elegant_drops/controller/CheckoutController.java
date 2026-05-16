@@ -13,8 +13,6 @@ import com.mercadopago.resources.preference.Preference;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -22,7 +20,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.regex.Pattern;
 
-@Controller
+@RestController
 public class CheckoutController {
 
     @Autowired private EmailService emailService;
@@ -33,7 +31,6 @@ public class CheckoutController {
     @Value("${mp.public-key}") private String mpPublicKey;
     @Value("${app.url:http://localhost:8080}") private String appUrl;
 
-    // ── VALIDACIONES ──────────────────────────────────────
     private static final Pattern RUT_PATTERN = Pattern.compile("^[0-9]{7,8}-[0-9Kk]$");
     private static final Pattern TELEFONO_PATTERN = Pattern.compile("^(\\+?56)?[0-9]{8,9}$");
     private static final Pattern EMAIL_PATTERN = Pattern.compile("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$");
@@ -43,24 +40,19 @@ public class CheckoutController {
         if (rut == null) return false;
         rut = rut.trim().toUpperCase().replace(".", "");
         if (!RUT_PATTERN.matcher(rut).matches()) return false;
-
         String[] partes = rut.split("-");
         String cuerpo = partes[0];
         char dvIngresado = partes[1].charAt(0);
-
-        int suma = 0;
-        int multiplo = 2;
+        int suma = 0, multiplo = 2;
         for (int i = cuerpo.length() - 1; i >= 0; i--) {
             suma += Character.getNumericValue(cuerpo.charAt(i)) * multiplo;
             multiplo = multiplo == 7 ? 2 : multiplo + 1;
         }
-
         int dvEsperado = 11 - (suma % 11);
         char dvCalculado;
         if (dvEsperado == 11) dvCalculado = '0';
         else if (dvEsperado == 10) dvCalculado = 'K';
         else dvCalculado = Character.forDigit(dvEsperado, 10);
-
         return dvIngresado == dvCalculado;
     }
 
@@ -68,75 +60,37 @@ public class CheckoutController {
                                              String telefono, String correo, String tipo,
                                              String direccion, String estacion) {
         Map<String, String> errores = new LinkedHashMap<>();
-
         if (!SOLO_LETRAS.matcher(nombre != null ? nombre : "").matches())
             errores.put("nombre", "Nombre inválido — solo letras, mínimo 2 caracteres");
-
         if (!SOLO_LETRAS.matcher(apellido != null ? apellido : "").matches())
             errores.put("apellido", "Apellido inválido — solo letras, mínimo 2 caracteres");
-
         if (!validarRut(rut))
             errores.put("rut", "RUT inválido — formato: 12345678-9");
-
         if (telefono == null || !TELEFONO_PATTERN.matcher(telefono.trim().replace(" ", "")).matches())
             errores.put("telefono", "Teléfono inválido — formato chileno requerido");
-
         if (correo == null || !EMAIL_PATTERN.matcher(correo.trim()).matches())
             errores.put("correo", "Correo electrónico inválido");
-
         if ("envio".equals(tipo)) {
             if (direccion == null || direccion.trim().length() < 10)
                 errores.put("direccion", "Dirección inválida — mínimo 10 caracteres");
             if (direccion != null && direccion.trim().length() > 200)
                 errores.put("direccion", "Dirección demasiado larga");
         }
-
         if ("retiro".equals(tipo)) {
             if (estacion == null || estacion.trim().isEmpty())
                 errores.put("estacion", "Selecciona una estación de retiro");
         }
-
         return errores;
     }
 
-    // ── PÁGINAS THYMELEAF (mientras migramos a React) ─────
-    @GetMapping("/checkout")
-    public String checkout(Model model) {
-        model.addAttribute("mpPublicKey", mpPublicKey);
-        return "checkout";
-    }
-
-    // ── API REST PARA REACT ───────────────────────────────
-    @PostMapping("/api/checkout/validar")
-    @ResponseBody
-    public ResponseEntity<?> validar(
-            @RequestParam String nombre,
-            @RequestParam String apellido,
-            @RequestParam String rut,
-            @RequestParam String telefono,
-            @RequestParam String correo,
-            @RequestParam String tipo,
-            @RequestParam(required = false) String direccion,
-            @RequestParam(required = false) String estacion) {
-
-        Map<String, String> errores = validarDatos(nombre, apellido, rut, telefono, correo, tipo, direccion, estacion);
-        if (!errores.isEmpty()) return ResponseEntity.badRequest().body(errores);
-        return ResponseEntity.ok(Map.of("valido", true));
-    }
-
     @PostMapping("/api/checkout/crear-preferencia")
-    @ResponseBody
-    public ResponseEntity<?> crearPreferenciaApi(
-            @RequestParam String nombre,
-            @RequestParam String apellido,
-            @RequestParam String rut,
-            @RequestParam String telefono,
-            @RequestParam String correo,
-            @RequestParam String tipo,
+    public ResponseEntity<?> crearPreferencia(
+            @RequestParam String nombre, @RequestParam String apellido,
+            @RequestParam String rut, @RequestParam String telefono,
+            @RequestParam String correo, @RequestParam String tipo,
             @RequestParam(required = false) String direccion,
             @RequestParam(required = false) String estacion,
-            @RequestParam String resumenPedido,
-            @RequestParam String total,
+            @RequestParam String resumenPedido, @RequestParam String total,
             @RequestParam String itemsJson) {
 
         Map<String, String> errores = validarDatos(nombre, apellido, rut, telefono, correo, tipo, direccion, estacion);
@@ -144,7 +98,6 @@ public class CheckoutController {
 
         try {
             String externalReference = correo + "-" + System.currentTimeMillis();
-
             Pedido pedido = new Pedido();
             pedido.setExternalReference(externalReference);
             pedido.setNombre(nombre.trim());
@@ -178,19 +131,17 @@ public class CheckoutController {
             PreferenceBackUrlsRequest backUrls = PreferenceBackUrlsRequest.builder()
                     .success(appUrl + "/confirmacion")
                     .failure(appUrl + "/error-pago")
-                    .pending(appUrl + "/pendiente")
+                    .pending(appUrl + "/error-pago?pendiente=true")
                     .build();
 
-            PreferenceRequest preferenceRequest = PreferenceRequest.builder()
-                    .items(items)
-                    .backUrls(backUrls)
-                    .autoReturn("approved")
-                    .externalReference(externalReference)
-                    .build();
+            Preference preference = new PreferenceClient().create(
+                    PreferenceRequest.builder()
+                            .items(items).backUrls(backUrls)
+                            .autoReturn("approved")
+                            .externalReference(externalReference)
+                            .build());
 
-            Preference preference = new PreferenceClient().create(preferenceRequest);
             return ResponseEntity.ok(Map.of("preferenceId", preference.getId()));
-
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(500).body(Map.of("error", "Error al procesar el pago"));
@@ -198,7 +149,6 @@ public class CheckoutController {
     }
 
     @GetMapping("/api/checkout/exito")
-    @ResponseBody
     public ResponseEntity<?> exitoApi(
             @RequestParam(required = false) String payment_id,
             @RequestParam(required = false) String status,
@@ -213,7 +163,6 @@ public class CheckoutController {
 
                 int totalNumerico = 0;
                 StringBuilder detalle = new StringBuilder();
-
                 if (pedido.getItemsJson() != null) {
                     for (String itemStr : pedido.getItemsJson().split("\\|")) {
                         String[] parts = itemStr.split(";");
@@ -238,14 +187,6 @@ public class CheckoutController {
                 String html = construirHtmlPedido(pedido);
                 emailService.enviar(pedido.getCorreo(), "Elegant Drops · Confirmación de pedido", html);
                 emailService.enviar(adminEmail, "Nuevo pedido — " + pedido.getNombre() + " " + pedido.getApellido(), html);
-
-                return ResponseEntity.ok(Map.of(
-                        "nombre", pedido.getNombre(),
-                        "correo", pedido.getCorreo(),
-                        "tipo", pedido.getTipoEntrega(),
-                        "total", pedido.getTotal(),
-                        "codigoTransaccion", payment_id != null ? payment_id : "N/A"
-                ));
             }
 
             if (pedido != null) {
@@ -259,145 +200,10 @@ public class CheckoutController {
             }
 
             return ResponseEntity.notFound().build();
-
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(500).body(Map.of("error", "Error al procesar confirmación"));
         }
-    }
-
-    // ── ENDPOINTS THYMELEAF (compatibilidad mientras migramos) ──
-    @PostMapping("/checkout/crear-preferencia")
-    @ResponseBody
-    public String crearPreferencia(
-            @RequestParam String nombre, @RequestParam String apellido,
-            @RequestParam String rut, @RequestParam String telefono,
-            @RequestParam String correo, @RequestParam String tipo,
-            @RequestParam(required = false) String direccion,
-            @RequestParam(required = false) String estacion,
-            @RequestParam String resumenPedido, @RequestParam String total,
-            @RequestParam String itemsJson) {
-
-        Map<String, String> errores = validarDatos(nombre, apellido, rut, telefono, correo, tipo, direccion, estacion);
-        if (!errores.isEmpty()) return "error-validacion";
-
-        try {
-            String externalReference = correo + "-" + System.currentTimeMillis();
-            Pedido pedido = new Pedido();
-            pedido.setExternalReference(externalReference);
-            pedido.setNombre(nombre.trim());
-            pedido.setApellido(apellido.trim());
-            pedido.setRut(rut.trim().toUpperCase());
-            pedido.setTelefono(telefono.trim());
-            pedido.setCorreo(correo.trim().toLowerCase());
-            pedido.setTipoEntrega(tipo);
-            pedido.setDireccion(direccion);
-            pedido.setEstacion(estacion);
-            pedido.setResumenPedido(resumenPedido);
-            pedido.setTotal(total);
-            pedido.setItemsJson(itemsJson);
-            pedido.setEstado("PENDIENTE");
-            pedido.setFecha(LocalDateTime.now());
-            pedidoRepository.save(pedido);
-
-            List<PreferenceItemRequest> items = new ArrayList<>();
-            for (String itemStr : itemsJson.split("\\|")) {
-                String[] parts = itemStr.split(";");
-                if (parts.length >= 3) {
-                    items.add(PreferenceItemRequest.builder()
-                            .title(parts[0])
-                            .quantity(Integer.parseInt(parts[1]))
-                            .unitPrice(new BigDecimal(parts[2]))
-                            .currencyId("CLP")
-                            .build());
-                }
-            }
-
-            PreferenceBackUrlsRequest backUrls = PreferenceBackUrlsRequest.builder()
-                    .success(appUrl + "/checkout/exito")
-                    .failure(appUrl + "/checkout/fallo")
-                    .pending(appUrl + "/checkout/pendiente")
-                    .build();
-
-            Preference preference = new PreferenceClient().create(
-                    PreferenceRequest.builder()
-                            .items(items).backUrls(backUrls)
-                            .autoReturn("approved")
-                            .externalReference(externalReference)
-                            .build());
-
-            return preference.getId();
-        } catch (Exception e) {
-            e.printStackTrace();
-            return "error";
-        }
-    }
-
-    @GetMapping("/checkout/exito")
-    public String exito(
-            @RequestParam(required = false) String payment_id,
-            @RequestParam(required = false) String status,
-            @RequestParam(required = false) String external_reference,
-            Model model) {
-
-        try {
-            Pedido pedido = pedidoRepository.findByExternalReference(external_reference).orElse(null);
-
-            if (pedido != null && "PENDIENTE".equals(pedido.getEstado())) {
-                pedido.setEstado("COMPLETADO");
-                pedidoRepository.save(pedido);
-
-                int totalNumerico = 0;
-                StringBuilder detalle = new StringBuilder();
-                if (pedido.getItemsJson() != null) {
-                    for (String itemStr : pedido.getItemsJson().split("\\|")) {
-                        String[] parts = itemStr.split(";");
-                        if (parts.length >= 3) {
-                            int cantidad = Integer.parseInt(parts[1]);
-                            int precio = Integer.parseInt(parts[2]);
-                            totalNumerico += precio * cantidad;
-                            detalle.append(cantidad).append("x ").append(parts[0])
-                                    .append(" — $").append(precio * cantidad).append("\n");
-                        }
-                    }
-                }
-
-                Venta venta = new Venta();
-                venta.setFecha(LocalDateTime.now());
-                venta.setTotal(totalNumerico);
-                venta.setTipoEntrega(pedido.getTipoEntrega());
-                venta.setCodigoTransaccion(payment_id != null ? payment_id : "N/A");
-                venta.setDetalle(detalle.toString());
-                ventaRepository.save(venta);
-
-                String html = construirHtmlPedido(pedido);
-                emailService.enviar(pedido.getCorreo(), "Elegant Drops · Confirmación de pedido", html);
-                emailService.enviar(adminEmail, "Nuevo pedido — " + pedido.getNombre() + " " + pedido.getApellido(), html);
-            }
-
-            if (pedido != null) {
-                model.addAttribute("nombre", pedido.getNombre());
-                model.addAttribute("correo", pedido.getCorreo());
-                model.addAttribute("tipo", pedido.getTipoEntrega());
-                model.addAttribute("total", pedido.getTotal());
-                model.addAttribute("codigoTransaccion", payment_id != null ? payment_id : "N/A");
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return "confirmacion";
-    }
-
-    @GetMapping("/checkout/fallo")
-    public String fallo(Model model) {
-        model.addAttribute("mensaje", "El pago no pudo procesarse. Por favor intenta nuevamente.");
-        return "error-pago";
-    }
-
-    @GetMapping("/checkout/pendiente")
-    public String pendiente(Model model) {
-        model.addAttribute("mensaje", "Tu pago está pendiente de confirmación. Te avisaremos por correo.");
-        return "error-pago";
     }
 
     private String construirHtmlPedido(Pedido pedido) {

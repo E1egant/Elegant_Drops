@@ -113,7 +113,7 @@ export default function Packs() {
       )}
 
       <PanelCarrito abierto={carritoAbierto} onCerrar={() => setCarritoAbierto(false)} />
-      <WhatsAppBtn />
+        <WhatsAppBtn oculto={carritoAbierto} />
     </div>
   )
 }
