@@ -3,12 +3,18 @@ import { useCarrito } from '../context/CarritoContext.jsx'
 
 export default function ModalPerfume({ fragancia, onCerrar, onAgregarExito }) {
     const [formatoSel, setFormatoSel] = useState(null)
+    const [toast, setToast] = useState(null)
     const { agregar } = useCarrito()
 
     if (!fragancia) return null
 
+    const mostrarToast = (msg) => {
+        setToast(msg)
+        setTimeout(() => setToast(null), 3000)
+    }
+
     const handleAgregar = () => {
-        if (!formatoSel) { alert('Selecciona un tamaño primero'); return }
+        if (!formatoSel) { mostrarToast('Selecciona un tamaño primero'); return }
         agregar({
             id: formatoSel.id,
             nombre: fragancia.nombre,
@@ -23,11 +29,11 @@ export default function ModalPerfume({ fragancia, onCerrar, onAgregarExito }) {
     }
 
     return (
-        <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onCerrar()}>
-            <div className="modal-box">
+        <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onCerrar()}
+             style={{ zIndex: 200 }}>
+            <div className="modal-box" style={{ zIndex: 201, position: 'relative' }}>
                 <div style={{ display: 'flex', flexDirection: 'column' }}>
 
-                    {/* IMAGEN */}
                     <div style={{ background: '#111009', minHeight: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 32 }}>
                         {fragancia.imagen ? (
                             <img src={fragancia.imagen} alt={fragancia.nombre}
@@ -37,7 +43,6 @@ export default function ModalPerfume({ fragancia, onCerrar, onAgregarExito }) {
                         )}
                     </div>
 
-                    {/* DETALLE */}
                     <div style={{ padding: '28px 32px' }}>
                         <button onClick={onCerrar} style={{
                             background: 'transparent', border: 'none', color: 'var(--text-faint)',
@@ -93,6 +98,18 @@ export default function ModalPerfume({ fragancia, onCerrar, onAgregarExito }) {
                     </div>
                 </div>
             </div>
+
+            {toast && (
+                <div style={{
+                    position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)',
+                    background: '#1a0a0a', border: '1px solid #ef4444', color: '#ef4444',
+                    padding: '14px 24px', borderRadius: 100, fontSize: 12, fontWeight: 700,
+                    textTransform: 'uppercase', letterSpacing: '0.1em', zIndex: 999,
+                    boxShadow: '0 8px 32px rgba(0,0,0,0.5)', whiteSpace: 'nowrap'
+                }}>
+                    {toast}
+                </div>
+            )}
         </div>
     )
 }

@@ -27,6 +27,11 @@ function validarRutFrontend(rut) {
 }
 
 export default function Checkout() {
+    const [toast, setToast] = useState(null)
+    const mostrarToast = (msg, tipo = 'error') => {
+        setToast({ msg, tipo })
+        setTimeout(() => setToast(null), 4000)
+    }
     const { carrito, total } = useCarrito()
     const navigate = useNavigate()
     const [tipo, setTipo] = useState(null)
@@ -34,20 +39,17 @@ export default function Checkout() {
     const [errores, setErrores] = useState({})
     const [procesando, setProcesando] = useState(false)
     const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
-    const [mpPublicKey, setMpPublicKey] = useState(null)
 
     useEffect(() => {
         if (carrito.length === 0) navigate('/')
         const handleResize = () => setIsMobile(window.innerWidth < 768)
         window.addEventListener('resize', handleResize)
-        axios.get('/api/checkout/config').then(res => setMpPublicKey(res.data.publicKey))
         return () => window.removeEventListener('resize', handleResize)
     }, [carrito])
 
     const handleChange = (e) => {
         let { name, value } = e.target
         const limites = { nombre: 50, apellido: 50, rut: 12, telefono: 15, correo: 100, direccion: 200, estacion: 100 }
-
         if (name === 'rut') {
             value = value.replace(/[^0-9kK]/g, '').toUpperCase()
             if (value.length > 9) value = value.slice(0, 9)
@@ -59,7 +61,6 @@ export default function Checkout() {
         } else {
             if (value.length > (limites[name] || 200)) return
         }
-
         setForm({ ...form, [name]: value })
         if (errores[name]) setErrores({ ...errores, [name]: null })
     }
@@ -98,36 +99,7 @@ export default function Checkout() {
         }).join('')
     }
 
-    const pagarConTarjeta = async () => {
-        const e = validar()
-        if (Object.keys(e).length > 0) { setErrores(e); return }
-        if (!mpPublicKey) { alert('Error de configuración. Intenta nuevamente.'); return }
-        setProcesando(true)
-        try {
-            const formData = new FormData()
-            Object.entries(form).forEach(([k, v]) => formData.append(k, v))
-            formData.append('tipo', tipo)
-            formData.append('resumenPedido', construirResumen())
-            formData.append('total', '$' + total.toLocaleString('es-CL'))
-            formData.append('itemsJson', construirItemsJson())
-
-            const res = await axios.post('/api/checkout/crear-preferencia', formData)
-            const { preferenceId } = res.data
-
-            const mp = new window.MercadoPago(mpPublicKey, { locale: 'es-CL' })
-            mp.checkout({ preference: { id: preferenceId }, autoOpen: true })
-        } catch (err) {
-            if (err.response?.data) setErrores(err.response.data)
-            else alert('Error al procesar el pago. Intenta nuevamente.')
-        } finally {
-            setProcesando(false)
-        }
-    }
-
-    const finalizarWhatsApp = () => {
-        const e = validar()
-        if (Object.keys(e).length > 0) { setErrores(e); return }
-
+    const _enviarWhatsApp = () => {
         let mensaje = `Hola, quiero hacer un pedido 🛍️\n\n`
         mensaje += `*Datos:*\n`
         mensaje += `Nombre: ${form.nombre} ${form.apellido}\n`
@@ -142,8 +114,33 @@ export default function Checkout() {
         mensaje += `\n*Total: $${total.toLocaleString('es-CL')}*\n\n`
         if (tipo === 'envio') mensaje += `*Entrega:* Envío a domicilio\nDirección: ${form.direccion}\n`
         else mensaje += `*Entrega:* Retiro en Metro ${form.estacion}\n`
-
         window.open(`https://wa.me/56982055029?text=${encodeURIComponent(mensaje)}`, '_blank')
+    }
+
+    const finalizarPedido = async () => {
+        const e = validar()
+        if (Object.keys(e).length > 0) { setErrores(e); return }
+        setProcesando(true)
+        try {
+            const formData = new FormData()
+            Object.entries(form).forEach(([k, v]) => formData.append(k, v))
+            formData.append('tipo', tipo)
+            formData.append('resumenPedido', construirResumen())
+            formData.append('total', '$' + total.toLocaleString('es-CL'))
+            formData.append('itemsJson', construirItemsJson())
+            await axios.post('/api/checkout/crear-preferencia', formData)
+            _enviarWhatsApp()
+        } catch {
+            mostrarToast('Error al procesar el pedido. Intenta nuevamente.')
+        } finally {
+            setProcesando(false)
+        }
+    }
+
+    const finalizarWhatsApp = () => {
+        const e = validar()
+        if (Object.keys(e).length > 0) { setErrores(e); return }
+        _enviarWhatsApp()
     }
 
     return (
@@ -263,10 +260,10 @@ export default function Checkout() {
                         </div>
 
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                            <button className="btn-primary" onClick={pagarConTarjeta} disabled={procesando}
+                            <button className="btn-primary" onClick={finalizarPedido} disabled={procesando}
                                     style={{ width: '100%', padding: '16px', opacity: procesando ? 0.7 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, fontSize: 12 }}>
-                                <i className="fa-solid fa-credit-card"></i>
-                                {procesando ? 'Procesando...' : 'Pagar con tarjeta'}
+                                <i className="fa-solid fa-bag-shopping"></i>
+                                {procesando ? 'Procesando...' : 'Confirmar pedido'}
                             </button>
                             <button onClick={finalizarWhatsApp}
                                     style={{
@@ -281,7 +278,7 @@ export default function Checkout() {
                                 Coordinar por WhatsApp
                             </button>
                             <p style={{ fontSize: 10, color: 'var(--text-faint)', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-                                Recibirás un comprobante por correo al pagar con tarjeta
+                                Recibirás confirmación por correo
                             </p>
                         </div>
                     </div>
@@ -328,6 +325,20 @@ export default function Checkout() {
 
                 </div>
             </main>
+
+            {toast && (
+                <div style={{
+                    position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)',
+                    background: toast.tipo === 'error' ? '#1a0a0a' : '#0a1a0a',
+                    border: `1px solid ${toast.tipo === 'error' ? '#ef4444' : 'var(--gold)'}`,
+                    color: toast.tipo === 'error' ? '#ef4444' : 'var(--gold)',
+                    padding: '14px 24px', borderRadius: 100, fontSize: 12, fontWeight: 700,
+                    textTransform: 'uppercase', letterSpacing: '0.1em', zIndex: 999,
+                    boxShadow: '0 8px 32px rgba(0,0,0,0.5)', whiteSpace: 'nowrap'
+                }}>
+                    {toast.msg}
+                </div>
+            )}
         </div>
     )
 }

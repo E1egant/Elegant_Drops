@@ -5,17 +5,10 @@ import com.example.elegant_drops.model.Venta;
 import com.example.elegant_drops.repository.PedidoRepository;
 import com.example.elegant_drops.repository.VentaRepository;
 import com.example.elegant_drops.service.EmailService;
-import com.mercadopago.client.preference.PreferenceClient;
-import com.mercadopago.client.preference.PreferenceItemRequest;
-import com.mercadopago.client.preference.PreferenceRequest;
-import com.mercadopago.client.preference.PreferenceBackUrlsRequest;
-import com.mercadopago.resources.preference.Preference;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.regex.Pattern;
@@ -102,9 +95,8 @@ public class CheckoutController {
         if (!errores.isEmpty()) return ResponseEntity.badRequest().body(errores);
 
         try {
-            String externalReference = correo + "-" + System.currentTimeMillis();
             Pedido pedido = new Pedido();
-            pedido.setExternalReference(externalReference);
+            pedido.setExternalReference(correo + "-" + System.currentTimeMillis());
             pedido.setNombre(nombre.trim());
             pedido.setApellido(apellido.trim());
             pedido.setRut(rut.trim().toUpperCase());
@@ -120,41 +112,14 @@ public class CheckoutController {
             pedido.setFecha(LocalDateTime.now());
             pedidoRepository.save(pedido);
 
-            List<PreferenceItemRequest> items = new ArrayList<>();
-            for (String itemStr : itemsJson.split("\\|")) {
-                String[] parts = itemStr.split(";");
-                if (parts.length >= 3) {
-                    items.add(PreferenceItemRequest.builder()
-                            .title(parts[0])
-                            .quantity(Integer.parseInt(parts[1]))
-                            .unitPrice(new BigDecimal(parts[2]))
-                            .currencyId("CLP")
-                            .build());
-                }
-            }
+            String html = construirHtmlPedido(pedido);
+            emailService.enviar(pedido.getCorreo(), "Elegant Drops · Pedido recibido", html);
+            emailService.enviar(adminEmail, "Nuevo pedido — " + pedido.getNombre() + " " + pedido.getApellido(), html);
 
-            PreferenceBackUrlsRequest backUrls = PreferenceBackUrlsRequest.builder()
-                    .success(appUrl + "/confirmacion")
-                    .failure(appUrl + "/error-pago")
-                    .pending(appUrl + "/error-pago?pendiente=true")
-                    .build();
-
-            Preference preference = new PreferenceClient().create(
-                    PreferenceRequest.builder()
-                            .items(items).backUrls(backUrls)
-                            .autoReturn("approved")
-                            .externalReference(externalReference)
-                            .build());
-
-            return ResponseEntity.ok(Map.of("preferenceId", preference.getId()));
-        } catch (com.mercadopago.exceptions.MPApiException e) {
-            e.printStackTrace();
-            System.out.println("MP Status: " + e.getStatusCode());
-            System.out.println("MP Response: " + e.getApiResponse().getContent());
-            return ResponseEntity.status(500).body(Map.of("error", "Error al procesar el pago: " + e.getApiResponse().getContent()));
+            return ResponseEntity.ok(Map.of("ok", true));
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.status(500).body(Map.of("error", "Error general: " + e.getMessage()));
+            return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
         }
     }
 

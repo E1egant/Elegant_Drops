@@ -24,14 +24,14 @@ export default function WhatsAppBtn({ oculto = false }) {
     if (oculto) return null
 
     return (
-        <div style={{ position: 'fixed', bottom: 24, right: 16, zIndex: 300 }}>
+        <div style={{ position: 'fixed', bottom: 24, right: 16, zIndex: 100 }}>
             {abierto && (
                 <>
-                    <div onClick={() => setAbierto(false)} style={{ position: 'fixed', inset: 0, zIndex: 299 }} />
+                    <div onClick={() => setAbierto(false)} style={{ position: 'fixed', inset: 0, zIndex: 99 }} />
                     <div style={{
                         position: 'absolute', bottom: '100%', right: 0, marginBottom: 12,
                         background: 'var(--bg-card)', border: '1px solid var(--border-soft)',
-                        borderRadius: 16, overflow: 'hidden', width: 280, zIndex: 300,
+                        borderRadius: 16, overflow: 'hidden', width: 280, zIndex: 100,
                         boxShadow: '0 20px 60px rgba(0,0,0,0.5)'
                     }}>
                         <div style={{ padding: '12px 18px', borderBottom: '1px solid var(--border-soft)' }}>
@@ -64,7 +64,8 @@ export default function WhatsAppBtn({ oculto = false }) {
                 background: '#25D366', color: 'white', border: 'none',
                 padding: '12px 20px', borderRadius: 100, cursor: 'pointer',
                 fontSize: 12, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em',
-                boxShadow: '0 4px 20px rgba(37,211,102,0.3)', transition: 'all 0.3s'
+                boxShadow: '0 4px 20px rgba(37,211,102,0.3)', transition: 'all 0.3s',
+                zIndex: 100, position: 'relative'
             }}
                     onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'}
                     onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}>
